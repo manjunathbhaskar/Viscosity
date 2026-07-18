@@ -32,10 +32,25 @@ with that runtime down still work for the routes wired up here.
 | `/api/ma/signals/emit` | POST, `{signal_type, source_entity, ...}` | `lib/diligence-bridge.ts::emitDiligenceSignal` |
 | `/api/ma/leukocyte/:docId` | POST | `lib/diligence-bridge.ts::scanDealbreakers` |
 
+Every shape above has been verified against a live-running instance, not
+assumed from a spec — see the type comments in `lib/diligence-bridge.ts` for
+the exact nesting (`warroom`'s score lives under `red_flags`, not top-level;
+`leukocyte` returns `{result: {clean_bill, critical_findings}}`, not the
+flat `pre_screen_findings` shape an earlier draft assumed).
+
 New VC Brain signal types (`FOUNDER_MOMENTUM`, `TRACTION_SIGNAL`,
 `CONTRADICTION_FLAG`) are emitted through the existing `/api/ma/signals/emit`
 route — no schema change is needed on the diligence-service side as long as
-its signal-type column is free-text.
+its signal-type column is free-text. Verified live: a signal emitted here
+shows up in that service's own signal log immediately.
+
+**Known caveat (found via live testing, not fixed here since it lives in
+the external service):** the `leukocyte` route's LLM pass appears tuned for
+full merger-agreement documents. Given a short, differently-shaped document
+(e.g. a founder dossier with no M&A boilerplate), it can return findings
+referencing entities that were never in the input at all. Treat findings
+from this route as a prompt to investigate manually, not as ground truth,
+until the external service documents how it handles out-of-domain input.
 
 ## Extending the bridge
 

@@ -71,9 +71,19 @@ To point at a live diligence service instead of mock fixtures, unset
 
 Core pipeline (Memory layer, cold-start scoring, 3-axis scorer, Trust Score,
 diligence bridge, memo generator, traceability log, mock mode, dashboard) is
-built and verified: type-checks clean, builds clean, and an integration
+built and verified two ways: type-checks clean, builds clean, an integration
 self-check (`npm run test:mock`) exercises the full Sourcing → Screening →
-Diligence → Decision flow.
+Diligence → Decision flow offline — and separately, the outbound sourcing
+tools and the diligence bridge have been run live against the real GitHub
+API and a live instance of an external diligence backend, end to end
+(source → upload → red-flag scan → dealbreaker scan → signal emitted into
+that service's own signal log → memo generated). That live pass caught and
+fixed two response-shape mismatches in `lib/diligence-bridge.ts` — see its
+type comments for what changed.
+
+**Not built:** there is no Twitter/X ingestion tool in this codebase.
+Outbound sourcing currently covers GitHub, Hacker News / Product Hunt
+launches, and website content only.
 
 A few modules are intentionally partial and say so in their own header
 comment: a live self-validation harness (`web/lib/self-validation.ts`) that

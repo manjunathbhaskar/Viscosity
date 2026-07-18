@@ -113,12 +113,12 @@ export async function sourceAndScreenDeal(input: SourceDealInput): Promise<Sourc
   const docId = enrichment.upload.doc_id;
   const [, dealbreakerScan] = await Promise.all([runWarroom(docId), scanDealbreakers(docId)]);
 
-  const dealbreakers: DealbreakerFlag[] = dealbreakerScan.pre_screen_findings.map((f) => ({
+  const dealbreakers: DealbreakerFlag[] = dealbreakerScan.result.critical_findings.map((f) => ({
     id: newId("flag"),
     dealId,
-    type: f.rule,
-    severity: f.severity,
-    message: f.excerpt,
+    type: f.type,
+    severity: f.severity.toLowerCase() as DealbreakerFlag["severity"],
+    message: f.description,
   }));
 
   // Bucket claims per axis so the 3-axis scorer sees the right evidence for each.

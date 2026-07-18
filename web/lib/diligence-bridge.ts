@@ -95,13 +95,25 @@ export interface WarroomBreakdown {
   truth_gap_contribution: number;
 }
 
+// Shape verified against a live-running instance of the diligence backend
+// (not assumed from a spec): the score/breakdown fields are nested under
+// `red_flags`, not top-level. `benford`, `coc`, and `truth_gaps` are returned
+// as their own sibling objects for anyone who wants to drill into a specific
+// signal beyond the aggregate score.
 export interface WarroomResult {
-  score: number;
-  traffic_light: "red" | "amber" | "green";
-  verdict: string;
-  total_red_flags: number;
-  flags: { source: string; severity: string; message: string }[];
-  breakdown: WarroomBreakdown;
+  doc_id: number;
+  chunks_analyzed: number;
+  benford: Record<string, unknown>;
+  coc: Record<string, unknown>;
+  truth_gaps: Record<string, unknown>;
+  red_flags: {
+    score: number;
+    traffic_light: "red" | "amber" | "green";
+    verdict: string;
+    total_red_flags: number;
+    flags: { source: string; severity: string; message: string }[];
+    breakdown: WarroomBreakdown;
+  };
 }
 
 export async function runWarroom(docId?: number): Promise<WarroomResult> {
@@ -114,12 +126,19 @@ export async function runWarroom(docId?: number): Promise<WarroomResult> {
 
 function mockWarroomResult(): WarroomResult {
   return {
-    score: 22,
-    traffic_light: "green",
-    verdict: "No material red flags found in available material.",
-    total_red_flags: 1,
-    flags: [{ source: "coc", severity: "low", message: "Standard founder vesting clause noted, no cliff anomaly." }],
-    breakdown: { benford_contribution: 4, coc_contribution: 10, truth_gap_contribution: 8 },
+    doc_id: -1,
+    chunks_analyzed: 1,
+    benford: { verdict: "insufficient_data" },
+    coc: { verdict: "clean" },
+    truth_gaps: {},
+    red_flags: {
+      score: 22,
+      traffic_light: "green",
+      verdict: "No material red flags found in available material.",
+      total_red_flags: 1,
+      flags: [{ source: "coc", severity: "low", message: "Standard founder vesting clause noted, no cliff anomaly." }],
+      breakdown: { benford_contribution: 4, coc_contribution: 10, truth_gap_contribution: 8 },
+    },
   };
 }
 
@@ -129,13 +148,18 @@ export interface AbsentTopic {
   topic: string;
   severity: string;
   suggested_question: string;
+  keywords_checked?: string[];
 }
 
+// Shape verified live: `high_severity_gaps` is an ARRAY of the high-severity
+// subset of `absent_topics`, not a count — easy to get wrong since the name
+// reads like a number.
 export interface AbsenceResult {
   absent_topics: AbsentTopic[];
   present_topics: string[];
   coverage_score: number;
-  high_severity_gaps: number;
+  high_severity_gaps: AbsentTopic[];
+  total_checked?: number;
   flag: boolean;
 }
 
@@ -148,14 +172,16 @@ export async function detectAbsences(docIds: number[]): Promise<AbsenceResult> {
 }
 
 function mockAbsenceResult(): AbsenceResult {
+  const gaps: AbsentTopic[] = [
+    { topic: "Cap Table", severity: "medium", suggested_question: "What is the current cap table and any outstanding SAFEs?" },
+    { topic: "Related Party", severity: "low", suggested_question: "Any related-party transactions to disclose?" },
+  ];
   return {
-    absent_topics: [
-      { topic: "Cap Table", severity: "medium", suggested_question: "What is the current cap table and any outstanding SAFEs?" },
-      { topic: "Related Party", severity: "low", suggested_question: "Any related-party transactions to disclose?" },
-    ],
+    absent_topics: gaps,
     present_topics: ["Material Contracts", "IP Ownership", "Litigation"],
     coverage_score: 0.72,
-    high_severity_gaps: 0,
+    high_severity_gaps: [],
+    total_checked: gaps.length + 3,
     flag: true,
   };
 }
@@ -207,24 +233,38 @@ export async function emitDiligenceSignal(params: {
 
 // ── Dealbreaker Scanner (Leukocyte) ─────────────────────────────────────────
 
+// Shape verified live: this is NOT the deterministic rule-based pre-screen
+// shape the route inventory comment above implies — the actual response is
+// `{agent, doc_id, result: {clean_bill, critical_findings}}`, where each
+// finding has `description`/`severity`/`type` (severity is UPPERCASE:
+// "CRITICAL" | "HIGH" | "MEDIUM" | "LOW") rather than `rule`/`excerpt`.
+// Caveat found in the same live test: on a short, non-M&A-shaped document
+// (a founder dossier, not a merger agreement) this endpoint's LLM pass
+// produced findings referencing entities that were never in our input at
+// all — it appears tuned for full merger-agreement documents and can
+// fabricate boilerplate when given thin, differently-shaped input. Treat
+// findings from this route as a hint to investigate manually, not a
+// ground-truth dealbreaker, until that's characterized further.
 export interface LeukocyteFinding {
-  rule: string;
-  severity: "critical" | "high" | "medium" | "low";
-  excerpt: string;
+  description: string;
+  severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+  type: string;
 }
 
 export interface LeukocyteResult {
-  pre_screen_findings: LeukocyteFinding[];
-  critical_count: number;
-  skip_llm: boolean;
-  rules_fired: number;
+  agent: string;
+  doc_id: number;
+  result: {
+    clean_bill: boolean;
+    critical_findings: LeukocyteFinding[];
+  };
 }
 
 export async function scanDealbreakers(docId: number): Promise<LeukocyteResult> {
   return safeFetch<LeukocyteResult>(
     `/api/ma/leukocyte/${docId}`,
     { method: "POST" },
-    () => ({ pre_screen_findings: [], critical_count: 0, skip_llm: false, rules_fired: 0 })
+    () => ({ agent: "leukocyte", doc_id: docId, result: { clean_bill: true, critical_findings: [] } })
   );
 }
 
