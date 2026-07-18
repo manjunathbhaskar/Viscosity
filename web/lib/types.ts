@@ -9,6 +9,7 @@ export type SourceKind =
   | "patent"
   | "accelerator"
   | "public_profile" // LinkedIn-equivalent public page
+  | "social_post" // X/Twitter-style public post
   | "web"
   | "deck"
   | "interview"

@@ -6,6 +6,7 @@
 import type { GithubSignal } from "@/agent/tools/github";
 import type { WebsiteExtract } from "@/agent/tools/website";
 import type { LaunchHit } from "@/agent/tools/launches";
+import type { XSignal } from "@/agent/tools/x";
 
 export interface DemoFounderSpec {
   founderName: string;
@@ -13,6 +14,7 @@ export interface DemoFounderSpec {
   companyOneLiner: string;
   githubUsername?: string;
   websiteUrl?: string;
+  xHandle?: string;
 }
 
 export const DEMO_FOUNDERS: DemoFounderSpec[] = [
@@ -22,6 +24,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     companyOneLiner: "Developer tools for a growing, underserved ai infra market",
     githubUsername: "ada-cortex-demo",
     websiteUrl: "https://northwindvectors.demo",
+    xHandle: "ada_cortex_demo",
   },
   {
     founderName: "Kenji Osei",
@@ -63,6 +66,33 @@ const LAUNCH_FIXTURES: Record<string, LaunchHit[]> = {
     { source: "hn", title: "Show HN: Vector Shard — sharded ANN index for embedding search", url: "https://news.ycombinator.com/item?id=demo1", points: 142, createdAt: "2026-07-11T00:00:00Z" },
   ],
 };
+
+const X_FIXTURES: Record<string, XSignal> = {
+  ada_cortex_demo: {
+    handle: "ada_cortex_demo",
+    followers: 340,
+    recentPosts: [
+      {
+        text: "Shipped v1.0 of vector-shard today — sharded ANN index that stays fast past 50M vectors. Benchmark writeup in the thread.",
+        createdAt: "2026-07-10T14:02:00Z",
+        likes: 58,
+        replies: 9,
+        isReplyToOther: false,
+      },
+      {
+        text: "You're right — the p99 numbers in my first post were measured on warm cache only. Responded to feedback and re-ran cold-cache, updated the thread with real numbers.",
+        createdAt: "2026-07-11T09:40:00Z",
+        likes: 31,
+        replies: 4,
+        isReplyToOther: true,
+      },
+    ],
+  },
+};
+
+export function mockXSignal(handle: string): XSignal | null {
+  return X_FIXTURES[handle.replace(/^@/, "")] ?? null;
+}
 
 export function mockGithubSignal(username: string): GithubSignal | null {
   return GITHUB_FIXTURES[username] ?? null;

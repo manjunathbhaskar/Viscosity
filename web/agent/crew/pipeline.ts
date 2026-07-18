@@ -31,6 +31,7 @@ export interface SourceDealInput {
   companyOneLiner?: string;
   githubUsername?: string;
   websiteUrl?: string;
+  xHandle?: string;
   channelId?: string;
   deckMarkdown?: string; // inbound apply: deck + name minimum
 }
@@ -77,6 +78,7 @@ export async function sourceAndScreenDeal(input: SourceDealInput): Promise<Sourc
     companyName: input.companyName,
     githubUsername: input.githubUsername,
     websiteUrl: input.websiteUrl,
+    xHandle: input.xHandle,
   });
 
   const claims: Claim[] = [...enrichment.claims];

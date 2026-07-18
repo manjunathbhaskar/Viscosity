@@ -19,6 +19,7 @@ const SOURCE_CLEANLINESS: Record<Source["kind"], number> = {
   hackathon: 0.65,
   interview: 0.6,
   public_profile: 0.55,
+  social_post: 0.5, // self-reported, unedited, but at least author-attributed and timestamped
   web: 0.5,
 };
 

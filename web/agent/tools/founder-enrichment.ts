@@ -13,6 +13,7 @@
 import { fetchGithubSignal, type GithubSignal } from "./github";
 import { fetchWebsiteExtract } from "./website";
 import { searchHackerNewsLaunches, searchProductHuntLaunches, type LaunchHit } from "./launches";
+import { fetchXSignal, type XSignal } from "./x";
 import { uploadDossier, type DiligenceUploadResult } from "@/lib/diligence-bridge";
 import type { Claim, Source } from "@/lib/types";
 import { newId } from "@/lib/memory/schema";
@@ -23,6 +24,7 @@ export interface FounderEnrichmentInput {
   companyName: string;
   githubUsername?: string;
   websiteUrl?: string;
+  xHandle?: string;
 }
 
 export interface FounderEnrichmentResult {
@@ -96,6 +98,71 @@ function launchesToClaimsAndSources(founderId: string, hits: LaunchHit[]): { cla
   return { claims, sources };
 }
 
+// Truncates a raw post to a readable claim length while keeping whichever
+// keyword triggered inclusion — cold-start.ts's process-signal patterns test
+// against the whole claim text, so the trigger word needs to survive here.
+function truncatePost(text: string, max = 220): string {
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
+function xToClaimsAndSources(founderId: string, signal: XSignal): { claims: Claim[]; sources: Source[] } {
+  const now = new Date().toISOString();
+  const source: Source = {
+    id: newId("src"),
+    url: `https://x.com/${signal.handle}`,
+    kind: "social_post",
+    fetchedAt: now,
+    title: `@${signal.handle} on X`,
+  };
+  const claims: Claim[] = [];
+
+  // Shipping/artifact posts — feeds shipping_cadence / artifact_velocity signals.
+  const shipping = signal.recentPosts.filter((p) => /\b(shipped|launched|built|released|deployed)\b/i.test(p.text));
+  for (const p of shipping.slice(0, 3)) {
+    claims.push({
+      id: newId("claim"),
+      subjectId: founderId,
+      subjectType: "founder",
+      text: `Posted on X: "${truncatePost(p.text)}" (${p.likes} likes, ${p.replies} replies).`,
+      sourceId: source.id,
+      confidence: 0.55,
+      timestamp: now,
+    });
+  }
+
+  // Public replies engaging with critique — feeds the critique_response signal
+  // directly; the wrapper sentence guarantees the trigger phrase survives
+  // even if the founder's own wording doesn't happen to match the pattern.
+  const critiqueReplies = signal.recentPosts.filter(
+    (p) => p.isReplyToOther && /\b(fixed|addressed|updated|patched|you'?re right|good (catch|point))\b/i.test(p.text)
+  );
+  for (const p of critiqueReplies.slice(0, 2)) {
+    claims.push({
+      id: newId("claim"),
+      subjectId: founderId,
+      subjectType: "founder",
+      text: `Publicly responded to feedback on X: "${truncatePost(p.text)}".`,
+      sourceId: source.id,
+      confidence: 0.6,
+      timestamp: now,
+    });
+  }
+
+  if (claims.length === 0 && signal.recentPosts.length > 0) {
+    claims.push({
+      id: newId("claim"),
+      subjectId: founderId,
+      subjectType: "founder",
+      text: `Active on X with ${signal.recentPosts.length} recent posts; no shipping or public critique-response detected.`,
+      sourceId: source.id,
+      confidence: 0.3,
+      timestamp: now,
+    });
+  }
+
+  return { claims, sources: [source] };
+}
+
 function buildDossierMarkdown(input: FounderEnrichmentInput, claims: Claim[]): string {
   const lines = [
     `# Founder Dossier — ${input.founderName}`,
@@ -109,11 +176,12 @@ function buildDossierMarkdown(input: FounderEnrichmentInput, claims: Claim[]): s
 }
 
 export async function enrichFounder(input: FounderEnrichmentInput): Promise<FounderEnrichmentResult> {
-  const [gh, site, hnHits, phHits] = await Promise.all([
+  const [gh, site, hnHits, phHits, xSignal] = await Promise.all([
     input.githubUsername ? fetchGithubSignal(input.githubUsername) : Promise.resolve(null),
     input.websiteUrl ? fetchWebsiteExtract(input.websiteUrl) : Promise.resolve(null),
     searchHackerNewsLaunches(input.companyName),
     searchProductHuntLaunches(input.companyName),
+    input.xHandle ? fetchXSignal(input.xHandle) : Promise.resolve(null),
   ]);
 
   let claims: Claim[] = [];
@@ -132,6 +200,11 @@ export async function enrichFounder(input: FounderEnrichmentInput): Promise<Foun
   const launchHits = [...(hnHits ?? []), ...(phHits ?? [])];
   if (launchHits.length > 0) {
     const r = launchesToClaimsAndSources(input.founderId, launchHits);
+    claims = claims.concat(r.claims);
+    sources = sources.concat(r.sources);
+  }
+  if (xSignal) {
+    const r = xToClaimsAndSources(input.founderId, xSignal);
     claims = claims.concat(r.claims);
     sources = sources.concat(r.sources);
   }

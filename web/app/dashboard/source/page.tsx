@@ -11,6 +11,7 @@ export default function SourcePage() {
   const [companyOneLiner, setCompanyOneLiner] = useState("");
   const [githubUsername, setGithubUsername] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [xHandle, setXHandle] = useState("");
   const [deckMarkdown, setDeckMarkdown] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export default function SourcePage() {
           companyOneLiner: companyOneLiner || undefined,
           githubUsername: githubUsername || undefined,
           websiteUrl: websiteUrl || undefined,
+          xHandle: xHandle || undefined,
           deckMarkdown: deckMarkdown || undefined,
         }),
       });
@@ -48,8 +50,8 @@ export default function SourcePage() {
         <p className="label mb-1">sourcing</p>
         <h1 className="serif text-[28px]">Source a founder</h1>
         <p className="mt-2 text-[13.5px] text-[var(--muted)]">
-          Inbound apply needs just a name + deck. Outbound scan pulls GitHub, launches, and website —
-          no deck required. Both converge into the same Screening step.
+          Inbound apply needs just a name + deck. Outbound scan pulls GitHub, launches, website, and
+          X — no deck required. Both converge into the same Screening step.
         </p>
       </div>
 
@@ -76,6 +78,7 @@ export default function SourcePage() {
         <>
           <input className="input" placeholder="github username (optional)" value={githubUsername} onChange={(e) => setGithubUsername(e.target.value)} />
           <input className="input" placeholder="website url (optional)" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} />
+          <input className="input" placeholder="x handle (optional)" value={xHandle} onChange={(e) => setXHandle(e.target.value)} />
         </>
       )}
 

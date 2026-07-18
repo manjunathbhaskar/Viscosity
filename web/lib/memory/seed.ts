@@ -31,6 +31,7 @@ async function runSeed(): Promise<void> {
       companyOneLiner: spec.companyOneLiner,
       githubUsername: spec.githubUsername,
       websiteUrl: spec.websiteUrl,
+      xHandle: spec.xHandle,
       deckMarkdown: spec.githubUsername
         ? undefined
         : `${spec.companyOneLiner}\nApplying via inbound form with no public footprint yet — true cold start.`,

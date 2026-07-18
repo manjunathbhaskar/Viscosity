@@ -81,9 +81,12 @@ that service's own signal log → memo generated). That live pass caught and
 fixed two response-shape mismatches in `lib/diligence-bridge.ts` — see its
 type comments for what changed.
 
-**Not built:** there is no Twitter/X ingestion tool in this codebase.
-Outbound sourcing currently covers GitHub, Hacker News / Product Hunt
-launches, and website content only.
+Outbound sourcing covers GitHub, Hacker News / Product Hunt launches,
+website content, and X (`agent/tools/x.ts`, official API v2, looks
+specifically for shipping posts and public critique-response — not follower
+counts). The X path is Bearer-token gated like every other optional tool
+here; without a token it returns null and the source is skipped rather than
+failing.
 
 A few modules are intentionally partial and say so in their own header
 comment: a live self-validation harness (`web/lib/self-validation.ts`) that
