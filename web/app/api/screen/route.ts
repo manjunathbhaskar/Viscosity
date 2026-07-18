@@ -25,6 +25,7 @@ export async function PATCH(req: Request) {
     outcome = fit;
     const hasCritical = mem.dealbreakers.some((db) => db.dealId === dealId && db.severity === "critical");
     deal.stage = fit.fits && !hasCritical ? "diligence" : "screening";
+    deal.thesisFit = { fits: fit.fits, score: fit.score, reasons: fit.reasons };
     deal.updatedAt = new Date().toISOString();
   });
 

@@ -33,6 +33,7 @@ const NAV = [
   { href: "/dashboard", label: "decision-ready queue" },
   { href: "/dashboard/source", label: "sourcing" },
   { href: "/dashboard/memory", label: "memory" },
+  { href: "/dashboard/validate", label: "predictions" },
 ];
 
 export default function RootLayout({

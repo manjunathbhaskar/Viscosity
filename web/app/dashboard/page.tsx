@@ -15,6 +15,7 @@ interface DealRow {
     ideaVsMarket: { score: number; low: number; high: number };
   } | null;
   criticalDealbreakers: number;
+  redFlagScore: { score: number; trafficLight: "red" | "amber" | "green"; verdict: string } | null;
   updatedAt: string;
 }
 
@@ -26,6 +27,8 @@ const STAGE_BADGE: Record<string, string> = {
   passed: "badge-gray",
   invested: "badge-green",
 };
+
+const TRAFFIC_BADGE: Record<string, string> = { red: "badge-red", amber: "badge-amber", green: "badge-green" };
 
 function AxisCell({ label, axis }: { label: string; axis: { score: number; low: number; high: number } | undefined }) {
   if (!axis) return <span className="label">—</span>;
@@ -79,6 +82,11 @@ export default function DashboardPage() {
             <AxisCell label="idea×market" axis={d.axisScore?.ideaVsMarket} />
             <div className="flex flex-col items-end gap-1.5">
               <span className={`badge ${STAGE_BADGE[d.stage] ?? "badge-gray"}`}>{d.stage.replace("_", " ")}</span>
+              {d.redFlagScore && (
+                <span className={`badge ${TRAFFIC_BADGE[d.redFlagScore.trafficLight]}`}>
+                  red flag {d.redFlagScore.score}
+                </span>
+              )}
               {d.criticalDealbreakers > 0 && <span className="badge badge-red">{d.criticalDealbreakers} dealbreaker</span>}
             </div>
           </Link>

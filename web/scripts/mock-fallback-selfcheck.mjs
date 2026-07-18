@@ -70,6 +70,10 @@ async function main() {
     );
     assert(axis.founder.low <= axis.founder.score && axis.founder.score <= axis.founder.high, "founder score falls within its own interval");
 
+    assert(sourceData.deal.redFlagScore && typeof sourceData.deal.redFlagScore.score === "number", "red flag score is captured on the deal, not discarded");
+    assert(sourceData.deal.thesisFit && Array.isArray(sourceData.deal.thesisFit.reasons), "thesis fit reasoning is persisted on the deal");
+    assert(Array.isArray(sourceData.deal.validatorFindings) && sourceData.deal.validatorFindings.length > 0, "self-correction validator actually ran and produced findings");
+
     const dealId = sourceData.deal.id;
 
     // 2. Inbound apply sourcing (deck + name minimum)

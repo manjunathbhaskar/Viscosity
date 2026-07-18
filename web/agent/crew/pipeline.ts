@@ -12,6 +12,7 @@ import { enrichFounder } from "@/agent/tools/founder-enrichment";
 import { runWarroom, scanDealbreakers } from "@/lib/diligence-bridge";
 import { buildTraceabilityEntry, traceAndEmitDiligenceSignal } from "@/lib/traceability";
 import { defaultThesis, evaluateThesisFit, type ThesisFitResult } from "@/lib/thesis-engine";
+import { runValidatorAgent } from "@/lib/validator-agent";
 import { logPrediction } from "@/lib/self-validation";
 import type {
   Claim,
@@ -113,7 +114,7 @@ export async function sourceAndScreenDeal(input: SourceDealInput): Promise<Sourc
 
   // Diligence: Red Flag Score + Dealbreaker Scanner against the uploaded material.
   const docId = enrichment.upload.doc_id;
-  const [, dealbreakerScan] = await Promise.all([runWarroom(docId), scanDealbreakers(docId)]);
+  const [warroom, dealbreakerScan] = await Promise.all([runWarroom(docId), scanDealbreakers(docId)]);
 
   const dealbreakers: DealbreakerFlag[] = dealbreakerScan.result.critical_findings.map((f) => ({
     id: newId("flag"),
@@ -137,23 +138,30 @@ export async function sourceAndScreenDeal(input: SourceDealInput): Promise<Sourc
   const axisScore = computeThreeAxisScore({ founderClaims, marketClaims, ideaFitClaims: ideaClaims });
   const trustScores = computeTrustScoresForSubject(founderId, claims, sources);
 
+  const thesisFit = evaluateThesisFit(defaultThesis(), company, axisScore);
+  const hasCriticalDealbreaker = dealbreakers.some((d) => d.severity === "critical");
+  // A second, independent pass over the same evidence before anything ships —
+  // catches internal contradictions the scoring math alone wouldn't flag.
+  const validatorFindings = runValidatorAgent(claims, axisScore);
+
   const deal: DealRecord = {
     id: dealId,
     founderId,
     companyId,
     route: input.route,
     channelId: input.channelId,
-    stage: "screening",
+    stage: thesisFit.fits && !hasCriticalDealbreaker ? "diligence" : "screening",
     diligenceDocId: docId,
+    redFlagScore: {
+      score: warroom.red_flags.score,
+      trafficLight: warroom.red_flags.traffic_light,
+      verdict: warroom.red_flags.verdict,
+    },
+    thesisFit: { fits: thesisFit.fits, score: thesisFit.score, reasons: thesisFit.reasons },
+    validatorFindings,
     createdAt: now,
     updatedAt: now,
   };
-
-  const thesisFit = evaluateThesisFit(defaultThesis(), company, axisScore);
-  const hasCriticalDealbreaker = dealbreakers.some((d) => d.severity === "critical");
-  if (thesisFit.fits && !hasCriticalDealbreaker) {
-    deal.stage = "diligence";
-  }
 
   // Agentic Traceability — every axis conclusion cites the claims behind it;
   // the founder-momentum conclusion also bridges into the diligence service's signal log.

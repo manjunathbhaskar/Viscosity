@@ -13,7 +13,15 @@ interface AxisScore {
 }
 
 interface DealDetail {
-  deal: { id: string; stage: string; route: string; diligenceDocId?: number };
+  deal: {
+    id: string;
+    stage: string;
+    route: string;
+    diligenceDocId?: number;
+    redFlagScore?: { score: number; trafficLight: "red" | "amber" | "green"; verdict: string };
+    thesisFit?: { fits: boolean; score: number; reasons: string[] };
+    validatorFindings?: { check: string; passed: boolean; detail: string }[];
+  };
   founder: { id: string; name: string } | null;
   company: { id: string; name: string; oneLiner?: string } | null;
   claims: { id: string; text: string; confidence: number; sourceId: string }[];
@@ -46,6 +54,7 @@ const SEVERITY_BADGE: Record<string, string> = {
 };
 
 const TRUST_BADGE: Record<string, string> = { high: "badge-green", medium: "badge-amber", low: "badge-red" };
+const TRAFFIC_BADGE: Record<string, string> = { red: "badge-red", amber: "badge-amber", green: "badge-green" };
 
 export default function DealDetailPage() {
   const params = useParams<{ id: string }>();
@@ -105,19 +114,58 @@ export default function DealDetailPage() {
         </section>
       )}
 
-      {data.dealbreakers.length > 0 && (
+      {data.deal.thesisFit && (
         <section>
-          <p className="label mb-3">dealbreaker scanner</p>
-          <div className="flex flex-col gap-2">
-            {data.dealbreakers.map((d) => (
+          <p className="label mb-3">screening gate — thesis fit</p>
+          <div className="card-paper p-4">
+            <div className="mb-2 flex items-center gap-2">
+              <span className={`badge ${data.deal.thesisFit.fits ? "badge-green" : "badge-amber"}`}>
+                {data.deal.thesisFit.fits ? "fits thesis" : "does not clear the bar"}
+              </span>
+              <span className="label">soft fit score {Math.round(data.deal.thesisFit.score * 100)}%</span>
+            </div>
+            <ul className="flex flex-col gap-1">
+              {data.deal.thesisFit.reasons.map((r, i) => (
+                <li key={i} className="text-[13px] text-[var(--muted)]">
+                  — {r}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      <section>
+        <p className="label mb-3">diligence — red flag score &amp; dealbreaker scanner</p>
+        <div className="flex flex-col gap-2">
+          {data.deal.redFlagScore && (
+            <div className="card-paper flex items-center justify-between p-3">
+              <div>
+                <p className="text-[13px]">{data.deal.redFlagScore.verdict}</p>
+                <p className="label mt-1">
+                  from the diligence engine&apos;s document-risk scan — a separate check from the 3-axis score above
+                </p>
+              </div>
+              <span className={`badge ${TRAFFIC_BADGE[data.deal.redFlagScore.trafficLight]}`}>
+                red flag {data.deal.redFlagScore.score}/100
+              </span>
+            </div>
+          )}
+          {data.dealbreakers.length > 0 ? (
+            data.dealbreakers.map((d) => (
               <div key={d.id} className="card-paper flex items-center justify-between p-3">
                 <p className="text-[13px]">{d.message}</p>
                 <span className={`badge ${SEVERITY_BADGE[d.severity] ?? "badge-gray"}`}>{d.severity}</span>
               </div>
-            ))}
-          </div>
-        </section>
-      )}
+            ))
+          ) : (
+            <div className="card-paper flex items-center justify-between p-3">
+              <p className="text-[13px] text-[var(--muted)]">Dealbreaker scan ran — no critical or high-severity findings.</p>
+              <span className="badge badge-green">clean</span>
+            </div>
+          )}
+        </div>
+      </section>
 
       <section>
         <p className="label mb-3">claims &amp; trust score — per claim, not per company</p>
@@ -163,6 +211,23 @@ export default function DealDetailPage() {
           ))}
         </div>
       </section>
+
+      {data.deal.validatorFindings && data.deal.validatorFindings.length > 0 && (
+        <section>
+          <p className="label mb-3">self-correction pass</p>
+          <div className="flex flex-col gap-2">
+            {data.deal.validatorFindings.map((f, i) => (
+              <div key={i} className="card-paper flex items-center justify-between p-3">
+                <div>
+                  <p className="text-[13px]">{f.detail}</p>
+                  <p className="label mt-1">{f.check.replace(/_/g, " ")}</p>
+                </div>
+                <span className={`badge ${f.passed ? "badge-green" : "badge-red"}`}>{f.passed ? "passed" : "flagged"}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {data.memo && (
         <section>

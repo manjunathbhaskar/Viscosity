@@ -68,6 +68,24 @@ export type DealStage =
 export type SourcingRoute = "inbound" | "outbound";
 
 // The per-application deal record in the Memory layer.
+export interface RedFlagSummary {
+  score: number; // 0..100, from the diligence engine — NOT the axis scores, a separate risk-document scan
+  trafficLight: "red" | "amber" | "green";
+  verdict: string;
+}
+
+export interface ThesisFitSummary {
+  fits: boolean;
+  score: number; // 0..1, soft fit strength — ranks the queue, doesn't gate it
+  reasons: string[]; // why it passed or failed each check, in plain language
+}
+
+export interface ValidatorFinding {
+  check: string;
+  passed: boolean;
+  detail: string;
+}
+
 export interface DealRecord {
   id: string;
   founderId: string;
@@ -76,6 +94,9 @@ export interface DealRecord {
   channelId?: string; // SourcingChannel, if outbound-sourced
   stage: DealStage;
   diligenceDocId?: number; // diligence-service document id, once uploaded
+  redFlagScore?: RedFlagSummary;
+  thesisFit?: ThesisFitSummary;
+  validatorFindings?: ValidatorFinding[];
   createdAt: string;
   updatedAt: string;
 }

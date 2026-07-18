@@ -23,6 +23,7 @@ export async function GET() {
         route: d.route,
         axisScore: scoreRecord?.latest ?? null,
         criticalDealbreakers: dealbreakers.filter((db) => db.severity === "critical").length,
+        redFlagScore: d.redFlagScore ?? null,
         updatedAt: d.updatedAt,
       };
     })
