@@ -7,11 +7,14 @@ import type { GithubSignal } from "@/agent/tools/github";
 import type { WebsiteExtract } from "@/agent/tools/website";
 import type { LaunchHit } from "@/agent/tools/launches";
 import type { XSignal } from "@/agent/tools/x";
+import type { Paper } from "@/agent/tools/papers";
+import type { PatentHit } from "@/agent/tools/patents";
 
 export interface DemoFounderSpec {
   founderName: string;
   companyName: string;
   companyOneLiner: string;
+  route: "inbound" | "outbound";
   githubUsername?: string;
   websiteUrl?: string;
   xHandle?: string;
@@ -22,6 +25,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     founderName: "Ada Cortex",
     companyName: "Northwind Vectors",
     companyOneLiner: "Developer tools for a growing, underserved ai infra market",
+    route: "outbound",
     githubUsername: "ada-cortex-demo",
     websiteUrl: "https://northwindvectors.demo",
     xHandle: "ada_cortex_demo",
@@ -30,8 +34,31 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     founderName: "Kenji Osei",
     companyName: "Ledger Loop",
     companyOneLiner: "B2B saas for reconciliation",
+    route: "inbound",
     // Deliberately no githubUsername/websiteUrl — true cold-start founder,
     // sourced from a hackathon channel with no other public footprint.
+  },
+  {
+    founderName: "Priyanka Sridhar",
+    companyName: "Helix Bio",
+    companyOneLiner: "AI-assisted protein folding pipeline for biotech R&D teams",
+    route: "outbound",
+    // Deliberately no githubUsername — demonstrates agentic discovery:
+    // Sourcing searches GitHub for "Helix Bio" itself and finds a real
+    // candidate before falling back to a cold start. Also has arXiv papers
+    // and a patent, since this founder is academic/technical, not a repeat
+    // of Ada Cortex's shipping-cadence profile.
+  },
+  {
+    founderName: "Marco Delacroix",
+    companyName: "Vantage Robotics",
+    companyOneLiner: "Autonomous warehouse robotics for mid-market logistics",
+    route: "outbound",
+    githubUsername: "vantage-robotics-demo",
+    websiteUrl: "https://vantagerobotics.demo",
+    // Website fixture text mentions an unresolved co-founder dispute — the
+    // one demo founder that actually trips the Dealbreaker Scanner, so the
+    // demo shows what a red deal looks like, not just clean ones.
   },
 ];
 
@@ -48,6 +75,32 @@ const GITHUB_FIXTURES: Record<string, GithubSignal> = {
       { name: "embed-bench", description: "Benchmark harness for embedding providers", pushedAt: "2026-06-20T00:00:00Z", stars: 9 },
     ],
   },
+  "helix-bio-labs": {
+    login: "helix-bio-labs",
+    publicRepos: 6,
+    followers: 28,
+    createdAt: "2022-11-19T00:00:00Z",
+    recentCommitCount: 4,
+    topRepos: [
+      { name: "fold-pipeline", description: "Protein folding inference pipeline, biotech R&D focused", pushedAt: "2026-06-30T00:00:00Z", stars: 12 },
+    ],
+  },
+  "vantage-robotics-demo": {
+    login: "vantage-robotics-demo",
+    publicRepos: 9,
+    followers: 45,
+    createdAt: "2021-08-02T00:00:00Z",
+    recentCommitCount: 7,
+    topRepos: [
+      { name: "warehouse-nav", description: "Autonomous navigation stack for warehouse robots", pushedAt: "2026-07-08T00:00:00Z", stars: 33 },
+    ],
+  },
+};
+
+// Company-name -> discovered GitHub login, mirroring what GitHub's own
+// search/users relevance ranking would surface for a real query.
+const GITHUB_DISCOVERY_FIXTURES: Record<string, string> = {
+  "Helix Bio": "helix-bio-labs",
 };
 
 const WEBSITE_FIXTURES: Record<string, WebsiteExtract> = {
@@ -59,6 +112,30 @@ const WEBSITE_FIXTURES: Record<string, WebsiteExtract> = {
       "We shipped v1.0 of our sharded ANN index, wrote a technical writeup on our benchmark " +
       "methodology, and have design partners running it in production. Waitlist open.",
   },
+  "https://vantagerobotics.demo": {
+    url: "https://vantagerobotics.demo",
+    title: "Vantage Robotics — autonomous warehouse robotics",
+    text:
+      "Vantage Robotics builds autonomous navigation for mid-market warehouse operators. " +
+      "Note to investors: the company is currently in mediation over an unresolved co-founder " +
+      "equity dispute following the departure of a technical co-founder earlier this year. " +
+      "Product shipped and in pilot with two logistics customers.",
+  },
+};
+
+const PAPER_FIXTURES: Record<string, Paper[]> = {
+  "Priyanka Sridhar": [
+    {
+      title: "Fast Approximate Folding Inference for Low-Resource Biotech Pipelines",
+      summary: "We present a distillation approach for protein folding inference that runs on commodity GPUs.",
+      url: "https://arxiv.org/abs/demo.helixbio1",
+      publishedAt: "2026-02-14T00:00:00Z",
+    },
+  ],
+};
+
+const PATENT_FIXTURES: Record<string, PatentHit[]> = {
+  "Priyanka Sridhar": [{ patentId: "11987654", title: "Method for compressed protein structure inference", date: "2025-09-02" }],
 };
 
 const LAUNCH_FIXTURES: Record<string, LaunchHit[]> = {
@@ -104,4 +181,16 @@ export function mockWebsiteExtract(url: string): WebsiteExtract | null {
 
 export function mockLaunchHits(query: string): LaunchHit[] | null {
   return LAUNCH_FIXTURES[query] ?? null;
+}
+
+export function mockGithubDiscovery(query: string): string | null {
+  return GITHUB_DISCOVERY_FIXTURES[query] ?? null;
+}
+
+export function mockPapers(authorName: string): Paper[] | null {
+  return PAPER_FIXTURES[authorName] ?? null;
+}
+
+export function mockPatents(inventorName: string): PatentHit[] | null {
+  return PATENT_FIXTURES[inventorName] ?? null;
 }

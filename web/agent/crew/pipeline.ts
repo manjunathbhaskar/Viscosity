@@ -114,7 +114,7 @@ export async function sourceAndScreenDeal(input: SourceDealInput): Promise<Sourc
 
   // Diligence: Red Flag Score + Dealbreaker Scanner against the uploaded material.
   const docId = enrichment.upload.doc_id;
-  const [warroom, dealbreakerScan] = await Promise.all([runWarroom(docId), scanDealbreakers(docId)]);
+  const [warroom, dealbreakerScan] = await Promise.all([runWarroom(docId), scanDealbreakers(docId, enrichment.dossierMarkdown)]);
 
   const dealbreakers: DealbreakerFlag[] = dealbreakerScan.result.critical_findings.map((f) => ({
     id: newId("flag"),

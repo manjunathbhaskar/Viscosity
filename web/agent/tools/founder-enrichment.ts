@@ -10,10 +10,12 @@
 // so the downstream diligence checks (red-flag scan, absence detection,
 // knowledge graph, dealbreaker scan) all have real material to work with.
 
-import { fetchGithubSignal, type GithubSignal } from "./github";
+import { discoverGithubHandle, fetchGithubSignal, type GithubSignal } from "./github";
 import { fetchWebsiteExtract } from "./website";
 import { searchHackerNewsLaunches, searchProductHuntLaunches, type LaunchHit } from "./launches";
 import { fetchXSignal, type XSignal } from "./x";
+import { searchArxivByAuthor, type Paper } from "./papers";
+import { searchPatentsByInventor, type PatentHit } from "./patents";
 import { uploadDossier, type DiligenceUploadResult } from "@/lib/diligence-bridge";
 import type { Claim, Source } from "@/lib/types";
 import { newId } from "@/lib/memory/schema";
@@ -34,7 +36,11 @@ export interface FounderEnrichmentResult {
   upload: DiligenceUploadResult;
 }
 
-function githubToClaimsAndSources(founderId: string, gh: GithubSignal): { claims: Claim[]; sources: Source[] } {
+function githubToClaimsAndSources(
+  founderId: string,
+  gh: GithubSignal,
+  discovered: boolean
+): { claims: Claim[]; sources: Source[] } {
   const now = new Date().toISOString();
   const source: Source = { id: newId("src"), url: `https://github.com/${gh.login}`, kind: "github", fetchedAt: now, title: `${gh.login} on GitHub` };
   const claims: Claim[] = [
@@ -42,9 +48,11 @@ function githubToClaimsAndSources(founderId: string, gh: GithubSignal): { claims
       id: newId("claim"),
       subjectId: founderId,
       subjectType: "founder",
-      text: `${gh.login} has ${gh.publicRepos} public repos and ${gh.recentCommitCount} recent push events — shipped commits recently.`,
+      text: `${discovered ? "(auto-discovered via GitHub search, not explicitly provided) " : ""}${gh.login} has ${gh.publicRepos} public repos and ${gh.recentCommitCount} recent push events — shipped commits recently.`,
       sourceId: source.id,
-      confidence: 0.75,
+      // Auto-discovered handles are an inferred match, not a confirmed one —
+      // trust score should reflect that until a human confirms the match.
+      confidence: discovered ? 0.5 : 0.75,
       timestamp: now,
     },
   ];
@@ -163,6 +171,52 @@ function xToClaimsAndSources(founderId: string, signal: XSignal): { claims: Clai
   return { claims, sources: [source] };
 }
 
+function papersToClaimsAndSources(founderId: string, papers: Paper[]): { claims: Claim[]; sources: Source[] } {
+  const now = new Date().toISOString();
+  const sources: Source[] = [];
+  const claims: Claim[] = [];
+  for (const p of papers.slice(0, 3)) {
+    const source: Source = { id: newId("src"), url: p.url, kind: "paper", fetchedAt: now, title: p.title };
+    sources.push(source);
+    claims.push({
+      id: newId("claim"),
+      subjectId: founderId,
+      subjectType: "founder",
+      text: `Wrote a technical paper: "${p.title}" (${p.publishedAt.slice(0, 10)}).`,
+      sourceId: source.id,
+      confidence: 0.8,
+      timestamp: now,
+    });
+  }
+  return { claims, sources };
+}
+
+function patentsToClaimsAndSources(founderId: string, patents: PatentHit[]): { claims: Claim[]; sources: Source[] } {
+  const now = new Date().toISOString();
+  const sources: Source[] = [];
+  const claims: Claim[] = [];
+  for (const p of patents.slice(0, 3)) {
+    const source: Source = {
+      id: newId("src"),
+      url: `https://patents.google.com/patent/US${p.patentId}`,
+      kind: "patent",
+      fetchedAt: now,
+      title: p.title,
+    };
+    sources.push(source);
+    claims.push({
+      id: newId("claim"),
+      subjectId: founderId,
+      subjectType: "founder",
+      text: `Named inventor on patent "${p.title}" (${p.date}).`,
+      sourceId: source.id,
+      confidence: 0.85,
+      timestamp: now,
+    });
+  }
+  return { claims, sources };
+}
+
 function buildDossierMarkdown(input: FounderEnrichmentInput, claims: Claim[]): string {
   const lines = [
     `# Founder Dossier — ${input.founderName}`,
@@ -176,19 +230,34 @@ function buildDossierMarkdown(input: FounderEnrichmentInput, claims: Claim[]): s
 }
 
 export async function enrichFounder(input: FounderEnrichmentInput): Promise<FounderEnrichmentResult> {
-  const [gh, site, hnHits, phHits, xSignal] = await Promise.all([
-    input.githubUsername ? fetchGithubSignal(input.githubUsername) : Promise.resolve(null),
+  // Agentic discovery: given no GitHub handle at all, don't just skip this
+  // source — search for a plausible match on the company name first (falls
+  // back to the founder's name if that comes up empty) before accepting a
+  // true cold start. Every claim built from a discovered handle is marked as
+  // such and scored at lower confidence than an explicitly-provided one.
+  let githubUsername = input.githubUsername;
+  let githubWasDiscovered = false;
+  if (!githubUsername) {
+    githubUsername =
+      (await discoverGithubHandle(input.companyName)) ?? (await discoverGithubHandle(input.founderName)) ?? undefined;
+    githubWasDiscovered = Boolean(githubUsername);
+  }
+
+  const [gh, site, hnHits, phHits, xSignal, papers, patents] = await Promise.all([
+    githubUsername ? fetchGithubSignal(githubUsername) : Promise.resolve(null),
     input.websiteUrl ? fetchWebsiteExtract(input.websiteUrl) : Promise.resolve(null),
     searchHackerNewsLaunches(input.companyName),
     searchProductHuntLaunches(input.companyName),
     input.xHandle ? fetchXSignal(input.xHandle) : Promise.resolve(null),
+    searchArxivByAuthor(input.founderName),
+    searchPatentsByInventor(input.founderName),
   ]);
 
   let claims: Claim[] = [];
   let sources: Source[] = [];
 
   if (gh) {
-    const r = githubToClaimsAndSources(input.founderId, gh);
+    const r = githubToClaimsAndSources(input.founderId, gh, githubWasDiscovered);
     claims = claims.concat(r.claims);
     sources = sources.concat(r.sources);
   }
@@ -205,6 +274,16 @@ export async function enrichFounder(input: FounderEnrichmentInput): Promise<Foun
   }
   if (xSignal) {
     const r = xToClaimsAndSources(input.founderId, xSignal);
+    claims = claims.concat(r.claims);
+    sources = sources.concat(r.sources);
+  }
+  if (papers && papers.length > 0) {
+    const r = papersToClaimsAndSources(input.founderId, papers);
+    claims = claims.concat(r.claims);
+    sources = sources.concat(r.sources);
+  }
+  if (patents && patents.length > 0) {
+    const r = patentsToClaimsAndSources(input.founderId, patents);
     claims = claims.concat(r.claims);
     sources = sources.concat(r.sources);
   }

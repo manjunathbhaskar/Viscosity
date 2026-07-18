@@ -70,3 +70,34 @@ export async function fetchGithubSignal(username: string): Promise<GithubSignal 
     return null;
   }
 }
+
+// Agentic discovery: when Sourcing is given no GitHub handle at all, don't
+// just return nothing — search GitHub's own public search API for a
+// plausible match on the company/founder name before falling back to a true
+// cold start. Live-verified during development (a real query for "vercel"
+// correctly resolved the real vercel org as the top-scored result). Returns
+// the top hit's login only when GitHub's own relevance score clears a
+// minimum bar, so a weak/unrelated match doesn't silently masquerade as a
+// found founder.
+const MIN_DISCOVERY_SCORE = 1.0;
+
+export async function discoverGithubHandle(query: string): Promise<string | null> {
+  if (process.env.VCBRAIN_MOCK === "1") {
+    const { mockGithubDiscovery } = await import("@/data/fixtures/founders");
+    return mockGithubDiscovery(query);
+  }
+  try {
+    const res = await fetch(
+      `https://api.github.com/search/users?q=${encodeURIComponent(query)}+in:login,name&per_page=3`,
+      { headers: { accept: "application/vnd.github+json", ...authHeaders() }, signal: AbortSignal.timeout(TIMEOUT_MS) }
+    );
+    if (!res.ok) throw new Error(`${res.status} discovering github handle for ${query}`);
+    const data = await res.json();
+    const top = Array.isArray(data.items) ? data.items[0] : null;
+    if (!top || Number(top.score ?? 0) < MIN_DISCOVERY_SCORE) return null;
+    return String(top.login);
+  } catch (err) {
+    console.error("[github:discover]", err);
+    return null;
+  }
+}

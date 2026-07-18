@@ -25,16 +25,17 @@ async function runSeed(): Promise<void> {
 
   for (const spec of DEMO_FOUNDERS) {
     const result = await sourceAndScreenDeal({
-      route: spec.githubUsername ? "outbound" : "inbound",
+      route: spec.route,
       founderName: spec.founderName,
       companyName: spec.companyName,
       companyOneLiner: spec.companyOneLiner,
       githubUsername: spec.githubUsername,
       websiteUrl: spec.websiteUrl,
       xHandle: spec.xHandle,
-      deckMarkdown: spec.githubUsername
-        ? undefined
-        : `${spec.companyOneLiner}\nApplying via inbound form with no public footprint yet — true cold start.`,
+      deckMarkdown:
+        spec.route === "inbound"
+          ? `${spec.companyOneLiner}\nApplying via inbound form with no public footprint yet — true cold start.`
+          : undefined,
     });
 
     const memo = await generateInvestmentMemo({

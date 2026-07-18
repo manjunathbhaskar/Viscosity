@@ -260,11 +260,31 @@ export interface LeukocyteResult {
   };
 }
 
-export async function scanDealbreakers(docId: number): Promise<LeukocyteResult> {
+// Keyword patterns the MOCK path scans the dossier text for, so
+// VCBRAIN_MOCK=1 can demonstrate a real dealbreaker finding instead of
+// every deal coming back clean by construction. The live route ignores
+// `dossierText` entirely — the real backend does its own analysis from the
+// uploaded document, this parameter only exists for the offline fixture.
+const MOCK_DEALBREAKER_PATTERNS: { pattern: RegExp; type: string; severity: LeukocyteFinding["severity"] }[] = [
+  { pattern: /co-?founder (equity )?dispute|founder dispute|co-?founder departure.*dispute/i, type: "Founder/Co-founder Dispute", severity: "CRITICAL" },
+  { pattern: /\b(litigation|lawsuit|sued|legal action)\b/i, type: "Active Litigation", severity: "HIGH" },
+  { pattern: /\b(under investigation|regulatory inquiry|subpoena)\b/i, type: "Regulatory Exposure", severity: "CRITICAL" },
+];
+
+function mockScanDealbreakers(docId: number, dossierText: string): LeukocyteResult {
+  const findings: LeukocyteFinding[] = MOCK_DEALBREAKER_PATTERNS.filter((p) => p.pattern.test(dossierText)).map((p) => ({
+    description: `Dossier text matched a "${p.type}" pattern — flag for manual review, not a confirmed finding.`,
+    severity: p.severity,
+    type: p.type,
+  }));
+  return { agent: "leukocyte", doc_id: docId, result: { clean_bill: findings.length === 0, critical_findings: findings } };
+}
+
+export async function scanDealbreakers(docId: number, dossierText: string = ""): Promise<LeukocyteResult> {
   return safeFetch<LeukocyteResult>(
     `/api/ma/leukocyte/${docId}`,
     { method: "POST" },
-    () => ({ agent: "leukocyte", doc_id: docId, result: { clean_bill: true, critical_findings: [] } })
+    () => mockScanDealbreakers(docId, dossierText)
   );
 }
 

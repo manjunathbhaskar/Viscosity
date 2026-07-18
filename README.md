@@ -64,6 +64,10 @@ To point at a live diligence service instead of mock fixtures, unset
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — request flow, Memory
   layer schema, scoring design
+- [`docs/ETHICS.md`](docs/ETHICS.md) — data-minimization policy and where
+  each constraint is actually enforced in code
+- [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md) — timed walkthrough and full
+  narration script for presenting this to a team or judges
 - [`diligence/README.md`](diligence/README.md) — the external diligence
   service's expected API contract
 
@@ -82,15 +86,24 @@ fixed two response-shape mismatches in `lib/diligence-bridge.ts` — see its
 type comments for what changed.
 
 Outbound sourcing covers GitHub, Hacker News / Product Hunt launches,
-website content, and X (`agent/tools/x.ts`, official API v2, looks
-specifically for shipping posts and public critique-response — not follower
-counts). The X path is Bearer-token gated like every other optional tool
-here; without a token it returns null and the source is skipped rather than
-failing.
+website content, X (official API v2, looks specifically for shipping posts
+and public critique-response — not follower counts), arXiv papers
+(free, live-verified), and patents (PatentsView, key-gated, built to their
+documented contract but not live-verified — no key was available during
+development). Every optional path is guarded the same way: no key means
+that source is skipped, not that anything fails.
+
+Given no GitHub handle at all, Sourcing doesn't just give up — it searches
+GitHub itself for a plausible match on the company or founder name
+(`agent/tools/github.ts::discoverGithubHandle`) before accepting a true cold
+start. Anything built from a discovered-not-provided handle is marked as
+such in the claim text and scored at lower confidence than an explicitly
+supplied one.
 
 A few modules are intentionally partial and say so in their own header
 comment: a live self-validation harness (`web/lib/self-validation.ts`) that
 needs real outcome data to be useful, a sourcing-channel prior model
 (`web/lib/scoring/channel-priors.ts`) that needs a real historical dataset,
-and a self-correction validator (`web/lib/validator-agent.ts`) with one real
-check implemented.
+and a self-correction validator (`web/lib/validator-agent.ts`, now actually
+wired into every sourced deal) with one real check implemented and one
+honestly labeled stub.
