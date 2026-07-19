@@ -107,3 +107,15 @@ needs real outcome data to be useful, a sourcing-channel prior model
 and a self-correction validator (`web/lib/validator-agent.ts`, now actually
 wired into every sourced deal) with one real check implemented and one
 honestly labeled stub.
+
+**Discover** (`/dashboard/discover`, `lib/discover.ts`) — actively searches
+GitHub and arXiv for new candidates matching an industry/geography/university
+filter, live-verified during development. Deliberately writes nothing to the
+Memory layer on its own; a candidate becomes a real, persisted, scored deal
+only once a human picks one and runs it through Sourcing (see
+`docs/ETHICS.md`).
+
+**Monthly digest** (`/dashboard/digest`, `lib/digest.ts`) — composes a real,
+written digest from a live Discover search and renders a copyable preview.
+Deliberately does not send anything: no email provider is wired up, and it
+never will fire a real send without your explicit go-ahead each time.

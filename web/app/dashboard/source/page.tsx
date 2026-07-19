@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface StatusResponse {
   mode: "live" | "mock";
@@ -13,7 +13,16 @@ interface StatusResponse {
 const STATUS_BADGE: Record<string, string> = { live: "badge-green", mock: "badge-amber", off: "badge-gray" };
 
 export default function SourcePage() {
+  return (
+    <Suspense fallback={<p className="label">loading…</p>}>
+      <SourceForm />
+    </Suspense>
+  );
+}
+
+function SourceForm() {
   const router = useRouter();
+  const params = useSearchParams();
   const [route, setRoute] = useState<"applied" | "sourced">("sourced");
   const [founderName, setFounderName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -25,6 +34,7 @@ export default function SourcePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<StatusResponse | null>(null);
+  const [prefilledFrom, setPrefilledFrom] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/system-status")
@@ -32,6 +42,18 @@ export default function SourcePage() {
       .then(setStatus)
       .catch(() => setStatus(null));
   }, []);
+
+  // Prefill from a Discover candidate — never auto-submits. A human still
+  // has to review and hit "run sourcing + screening" themselves.
+  useEffect(() => {
+    const name = params.get("prefillName");
+    if (!name) return;
+    setFounderName(name);
+    setCompanyName(params.get("prefillCompany") ?? "");
+    setGithubUsername(params.get("prefillGithub") ?? "");
+    setRoute("sourced");
+    setPrefilledFrom(params.get("prefillSource"));
+  }, [params]);
 
   async function submit() {
     setBusy(true);
@@ -108,6 +130,13 @@ export default function SourcePage() {
             {route === "sourced" ? "Sourced" : "Applied"}
           </div>
         </div>
+
+        {prefilledFrom && (
+          <div className="mb-4 rounded-lg bg-[var(--accent-soft,rgba(28,78,216,0.08))] px-3 py-2 text-[12.5px]">
+            Prefilled from a Discover candidate ({prefilledFrom}). This is an inferred match, not a confirmed
+            identity — review before running.
+          </div>
+        )}
 
         <div className="card-paper mb-4 flex gap-1.5 p-1.5">
           <button

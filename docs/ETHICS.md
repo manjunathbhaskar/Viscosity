@@ -49,6 +49,25 @@ An inferred identity match is not the same fact as a confirmed one, and the
 data shouldn't pretend otherwise. A human should confirm the match before
 it drives a real decision.
 
+## Discovery creates no shadow profiles
+
+Discover (`lib/discover.ts`) actively searches GitHub and arXiv for
+candidates matching a filter — that's a materially bigger surface than
+scoring one founder you already named. Matching a filter search is not
+consent to being evaluated, so a search result is deliberately ephemeral:
+nothing is written to the Memory layer, no Claim or Source record is
+created, and no score is computed, for anyone who merely shows up in a
+results list. That only starts once a human explicitly picks a candidate
+and runs them through Sourcing — the same claim-by-claim, evidence-linked
+process every other founder goes through, not a shortcut.
+
+## The digest never sends itself
+
+The monthly digest (`lib/digest.ts`) composes real written text from a live
+Discover search, but stops there — no email provider is wired up, and nothing
+in this codebase will fire a real send on a schedule or without a human
+explicitly approving a specific recipient and message each time.
+
 ## A human makes the decision
 
 This system produces a memo, a set of scores, and an evidence trail — it

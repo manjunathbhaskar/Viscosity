@@ -109,6 +109,30 @@ async function main() {
     assert(Array.isArray(traceData.traceability) && traceData.traceability.length > 0, "traceability entries exist for the deal");
     assert(traceData.traceability.every((t) => Array.isArray(t.claimIds)), "every traceability entry cites claim ids");
 
+    // 4b. Discover — active candidate search, never persisted to Memory
+    console.log("[selfcheck] discover: filter search for new candidates");
+    const discoverRes = await fetch(`${BASE}/api/discover`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ industry: "robotics", geography: "San Francisco" }),
+    });
+    const discoverData = await discoverRes.json();
+    assert(discoverData.ok === true, "discover route returns ok:true");
+    assert(Array.isArray(discoverData.candidates) && discoverData.candidates.length > 0, "discover surfaces candidates for a known mock filter combo");
+    assert(discoverData.candidates.every((c) => c.sourceUrl && c.sourceKind), "every candidate carries a source url and kind");
+
+    // 4c. Digest — written preview built on Discover, never sends anything
+    console.log("[selfcheck] digest: generate a preview, confirm it never sends");
+    const digestRes = await fetch(`${BASE}/api/digest`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ industry: "robotics", geography: "San Francisco" }),
+    });
+    const digestData = await digestRes.json();
+    assert(digestData.ok === true, "digest route returns ok:true");
+    assert(digestData.digest.entries.length > 0, "digest surfaces entries for a known mock filter combo");
+    assert(typeof digestData.digest.bodyText === "string" && digestData.digest.bodyText.length > 0, "digest produces real written body text");
+
     // 5. Memo generation — mandatory sections only, gaps flagged not fabricated
     console.log("[selfcheck] memo generation");
     const memoRes = await fetch(`${BASE}/api/memo`, {

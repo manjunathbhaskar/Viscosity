@@ -328,3 +328,26 @@ export interface MomentumPlan {
   generatedAt: string;
   source: "mock" | "momentum-engine";
 }
+
+// ── Discover — active candidate search (not yet a scored deal) ─────────
+
+export interface DiscoverFilters {
+  industry?: string; // keyword, e.g. "robotics", "energy"
+  geography?: string; // e.g. "San Francisco"
+  university?: string; // e.g. "MIT"
+}
+
+// A candidate is deliberately NOT a Founder/DealRecord — surfacing someone
+// in a filter search creates no persistent record and runs no scoring.
+// Nothing happens to a candidate's data until a human explicitly chooses to
+// screen them (see docs/ETHICS.md — no shadow profiles from passive search).
+export interface Candidate {
+  id: string; // ephemeral, search-result-scoped — not a Memory id
+  name: string;
+  headline: string; // why this hit is relevant, in one line
+  sourceKind: SourceKind;
+  sourceUrl: string;
+  suggestedCompanyName?: string;
+  suggestedGithubUsername?: string;
+  matchedFilters: DiscoverFilters;
+}
