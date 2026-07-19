@@ -394,7 +394,7 @@ export default function DealDetailPage() {
           )}
           {data.deal.redFlagScore && (
             <div className="text-center" title="Red Flag Score — a separate diligence-engine document scan, not blended with the 3-axis score">
-              <Ring pct={100 - data.deal.redFlagScore.score} color={TRAFFIC_COLOR[data.deal.redFlagScore.trafficLight]} size={40} />
+              <Ring pct={data.deal.redFlagScore.score} color={TRAFFIC_COLOR[data.deal.redFlagScore.trafficLight]} size={40} />
               <p className="label mt-0.5">red flag</p>
             </div>
           )}
