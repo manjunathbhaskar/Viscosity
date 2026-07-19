@@ -39,6 +39,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable} ${heading.variable}`}>
       <body>
+        <div className="glow-spot glow-spot-1" />
+        <div className="glow-spot glow-spot-2" />
+        <div className="noise-overlay" />
         <header>
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5">
             <Link href="/" className="flex items-center gap-2.5">
