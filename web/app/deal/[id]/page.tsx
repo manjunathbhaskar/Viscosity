@@ -8,7 +8,7 @@ interface AxisScore {
   score: number;
   low: number;
   high: number;
-  trend: string;
+  trend: Trend;
   confidence: number;
   basis: string;
 }
@@ -47,7 +47,7 @@ interface SourceRow {
 interface DealDetail {
   deal: {
     id: string;
-    stage: string;
+    stage: DealStage;
     route: string;
     diligenceDocId?: number;
     redFlagScore?: { score: number; trafficLight: "red" | "amber" | "green"; verdict: string };
@@ -59,7 +59,7 @@ interface DealDetail {
   claims: ClaimRow[];
   sources: SourceRow[];
   scoreRecord: { latest: { founder: AxisScore; market: AxisScore; ideaVsMarket: AxisScore }; repetitions: number; easeFactor: number } | null;
-  trustScores: { claimId: string; confidence: number; level: string; components: { dataVolume: number; dataCleanliness: number; signalAgreement: number } }[];
+  trustScores: { claimId: string; confidence: number; level: TrustLevel; components: { dataVolume: number; dataCleanliness: number; signalAgreement: number } }[];
   dealbreakers: { id: string; type: string; severity: string; message: string }[];
   traceability: { id: string; conclusion: string; sourceUrls: string[]; agent: string; diligenceSignalType?: string }[];
   memo: { id: string; sections: { section: string; mandatory: boolean; rendered: boolean; body: string }[]; gaps: { field: string; note: string }[] } | null;
@@ -220,9 +220,7 @@ export default function DealDetailPage() {
     setData(json);
   }, [params.id]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   async function generateMemo() {
     setGeneratingMemo(true);
@@ -399,7 +397,16 @@ export default function DealDetailPage() {
             <p className="label">{data.deal.route}</p>
           </div>
           <h1 className="serif text-[30px]">{data.founder.name}</h1>
-          <p className="text-[14px] text-[var(--muted)]">{data.company.name}{data.company.oneLiner ? ` — ${data.company.oneLiner}` : ""}</p>
+          <p className="text-[14px] text-[var(--muted)]">
+            {data.company.name}
+            {data.company.oneLiner ? ` — ${data.company.oneLiner}` : ""}
+          </p>
+          <p className="label mt-1">{data.deal.route} route</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="btn" onClick={generateMemo} disabled={generatingMemo}>
+            {generatingMemo ? "generating..." : data.memo ? "regenerate memo" : "generate memo"}
+          </button>
         </div>
 
         <div className="flex items-center gap-4">
