@@ -17,22 +17,28 @@ export interface TavilyPulse {
 
 const DEFAULT_FINDINGS: TavilyFinding[] = [
   {
+    title: "Growing market: AI infrastructure expected to reach $74B by 2030",
+    url: "https://example.com/ai-infra-market-report",
+    snippet: "The AI infrastructure market is projected to grow at a CAGR of 28%, with increasing demand from enterprises adopting LLM-based workflows.",
+    relevance: 0.88,
+  },
+  {
+    title: "Paying customers and strong retention reported",
+    url: "https://example.com/product-adoption-signal",
+    snippet: "Early adopters report high engagement and repeat usage, with organic pull driving waitlist growth of 300% quarter over quarter.",
+    relevance: 0.82,
+  },
+  {
+    title: "Competitive signal: well-funded rivals entering adjacent space",
+    url: "https://example.com/competitive-landscape",
+    snippet: "Series B competitor positions around enterprise workflows but lacks the developer-first wedge that drives bottom-up adoption.",
+    relevance: 0.71,
+  },
+  {
     title: "Founder momentum: shipping cadence visible on GitHub",
     url: "https://example.com/github-shipping-cadence",
-    snippet: "Recent commits and release notes show weekly ship velocity and responsive issue handling.",
+    snippet: "Recent commits and release notes show weekly ship velocity and responsive issue handling across 14 public repositories.",
     relevance: 0.86,
-  },
-  {
-    title: "Market chatter: buyer pain around outbound noise",
-    url: "https://example.com/buyer-noise-fatigue",
-    snippet: "Prospects report lower reply rates and reward creators who engage before outreach.",
-    relevance: 0.79,
-  },
-  {
-    title: "Competitive signal: new entrant focusing on warm intros",
-    url: "https://example.com/warm-intro-platform",
-    snippet: "A seed-stage competitor positions around pre-outreach familiarity building.",
-    relevance: 0.71,
   },
 ];
 
