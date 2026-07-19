@@ -26,7 +26,10 @@ function enqueue<T>(task: () => Promise<T>): Promise<T> {
 export async function getMemory(): Promise<MemoryState> {
   try {
     const raw = await fs.readFile(FILE, "utf8");
-    return JSON.parse(raw) as MemoryState;
+    // Merge onto emptyMemory() defaults so a schema field added after this
+    // file was last written (e.g. a renamed array) doesn't crash every
+    // updateMemory() caller that pushes onto it — it just starts empty.
+    return { ...emptyMemory(), ...(JSON.parse(raw) as Partial<MemoryState>) };
   } catch {
     return emptyMemory();
   }

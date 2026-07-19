@@ -8,6 +8,8 @@ import type {
   DealbreakerFlag,
   Founder,
   InvestmentMemo,
+  SimulationRecord,
+  MomentumPlan,
   Source,
   SourcingChannel,
   Startup,
@@ -40,6 +42,8 @@ export interface MemoryState {
   memos: InvestmentMemo[];
   channels: SourcingChannel[];
   dealbreakers: DealbreakerFlag[];
+  simulations: SimulationRecord[];
+  momentumPlans: MomentumPlan[];
 }
 
 export function emptyMemory(): MemoryState {
@@ -55,6 +59,8 @@ export function emptyMemory(): MemoryState {
     memos: [],
     channels: [],
     dealbreakers: [],
+    simulations: [],
+    momentumPlans: [],
   };
 }
 

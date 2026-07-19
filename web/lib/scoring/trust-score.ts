@@ -21,6 +21,9 @@ const SOURCE_CLEANLINESS: Record<Source["kind"], number> = {
   public_profile: 0.55,
   social_post: 0.5, // self-reported, unedited, but at least author-attributed and timestamped
   web: 0.5,
+  web_pulse: 0.5, // Tavily search snippet — same tier as freeform web text
+  simulation: 0.55, // synthesized by the swarm, not a primary source, but internally consistent
+  momentum_plan: 0.55, // derived/internal, same tier as simulation output
 };
 
 function findCorroborating(claim: Claim, allClaims: Claim[]): Claim[] {
@@ -51,7 +54,14 @@ export function computeTrustScore(claim: Claim, allClaims: Claim[], sources: Sou
   const contradicting = claim.contradictedBy?.length ?? 0;
 
   const dataVolume = Math.min(1, corroborating.length / 3); // 3+ independent sources = full volume
-  const dataCleanliness = source ? SOURCE_CLEANLINESS[source.kind] : 0.4;
+  // Blend the source-kind prior with this specific claim's own ingestion-time
+  // confidence (see founder-enrichment.ts — varies 0.3-0.85 by evidence
+  // specificity, e.g. a named patent vs. a generic web snippet). Without this,
+  // every claim from the same source kind with zero corroboration collapses
+  // to the exact same trust score regardless of how strong that particular
+  // claim actually is — which is what was happening (a flat 35% everywhere).
+  const sourceCleanliness = source ? SOURCE_CLEANLINESS[source.kind] : 0.4;
+  const dataCleanliness = sourceCleanliness * 0.55 + claim.confidence * 0.45;
   const totalOpinions = corroborating.length + contradicting;
   const signalAgreement = totalOpinions === 0 ? 0.5 : corroborating.length / (totalOpinions + 1);
 

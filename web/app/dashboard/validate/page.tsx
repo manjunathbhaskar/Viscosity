@@ -38,11 +38,8 @@ export default function ValidatePage() {
         <p className="label mb-1">self-validation harness · tier 2</p>
         <h1 className="serif text-[28px]">Prediction log</h1>
         <p className="mt-2 max-w-2xl text-[13.5px] text-[var(--muted)]">
-          Every deal sourced gets its 3-axis score logged here automatically, timestamped before any
-          outcome is known — this is the real, working half of the harness. The other half needs real
-          announced results to diff against, which this build doesn&apos;t have yet.{" "}
-          <code className="mono text-[12px]">lib/self-validation.ts::scoreAgainstAnnouncedResults</code>{" "}
-          is ready to run the comparison the moment real outcomes exist.
+          Every sourced deal&apos;s score is logged here, timestamped before any outcome is known.
+          Diffing against real announced results isn&apos;t wired up yet.
         </p>
       </div>
 

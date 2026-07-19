@@ -1,7 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+interface StatusResponse {
+  mode: "live" | "mock";
+  swarm: "live" | "mock";
+  tavily: "live" | "mock";
+  elevenlabs: "live" | "off";
+}
+
+const STATUS_BADGE: Record<string, string> = { live: "badge-green", mock: "badge-amber", off: "badge-gray" };
 
 export default function SourcePage() {
   const router = useRouter();
@@ -15,6 +24,14 @@ export default function SourcePage() {
   const [deckMarkdown, setDeckMarkdown] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<StatusResponse | null>(null);
+
+  useEffect(() => {
+    fetch("/api/system-status")
+      .then((r) => r.json())
+      .then(setStatus)
+      .catch(() => setStatus(null));
+  }, []);
 
   async function submit() {
     setBusy(true);
@@ -45,57 +62,107 @@ export default function SourcePage() {
   }
 
   return (
-    <div className="rise flex max-w-xl flex-col gap-5">
-      <div>
-        <p className="label mb-1">sourcing</p>
-        <h1 className="serif text-[28px]">Source a founder</h1>
-        <p className="mt-2 text-[13.5px] text-[var(--muted)]">
-          Inbound apply needs just a name + deck. Outbound scan pulls GitHub, launches, website, and
-          X — no deck required. Both converge into the same Screening step.
+    <div className="rise grid gap-8 lg:grid-cols-[1.2fr_1fr]">
+      <div className="card p-6">
+        <p className="label mb-1">flowstart</p>
+        <h1 className="serif text-[30px] leading-tight text-[var(--ink)]">Pulse → Simulation → Diligence</h1>
+        <p className="mt-3 max-w-xl text-[13.5px] text-[var(--muted)]">
+          Spin up a deal with outbound discovery (GitHub, launches, web, Tavily pulse) or inbound deck. Each run fans into swarm
+          simulation, an influence plan, the diligence bridge, and memo audio.
         </p>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {[
+            { title: "Pulse", body: "Tavily web signals become claims (web_pulse)", key: "tavily" as const },
+            { title: "Swarm", body: "BlackSwanX/NEXUS adversarial swarm via sidecar", key: "swarm" as const },
+            { title: "Audio", body: "Memos to speech with ElevenLabs", key: "elevenlabs" as const },
+          ].map((item) => (
+            <div key={item.title} className="card-paper p-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-medium">{item.title}</span>
+                {status && <span className={`badge ${STATUS_BADGE[status[item.key]]}`}>{status[item.key]}</span>}
+              </div>
+              <p className="mt-2 text-[12.5px] text-[var(--muted)]">{item.body}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 card-paper p-4">
+          <p className="label mb-2">run sequence</p>
+          <ol className="flex flex-col gap-1.5 text-[13px] text-[var(--muted)]">
+            <li>1) Collect founder + company → sourcing run</li>
+            <li>2) Claims → 3-axis score, trust, validator, dealbreakers</li>
+            <li>3) Swarm simulation &amp; Tavily pulse stored as evidence</li>
+            <li>4) Memo + optional audio for IC</li>
+          </ol>
+        </div>
       </div>
 
-      <div className="card-paper flex gap-2 p-1.5">
-        <button
-          className={`flex-1 rounded-md py-2 text-[13px] ${route === "outbound" ? "btn" : "btn-ghost"}`}
-          onClick={() => setRoute("outbound")}
-        >
-          outbound scan
-        </button>
-        <button
-          className={`flex-1 rounded-md py-2 text-[13px] ${route === "inbound" ? "btn" : "btn-ghost"}`}
-          onClick={() => setRoute("inbound")}
-        >
-          inbound apply
-        </button>
+      <div className="card-paper p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <p className="label mb-1">source</p>
+            <h2 className="text-[18px] font-semibold">Create a new deal</h2>
+          </div>
+          <div className="card-dark rounded-full px-3 py-1.5 text-[12px]">
+            {route === "outbound" ? "Outbound scan" : "Inbound apply"}
+          </div>
+        </div>
+
+        <div className="card-paper mb-4 flex gap-1.5 p-1.5">
+          <button
+            className={`pill-tab flex-1 justify-center ${route === "outbound" ? "active" : ""}`}
+            onClick={() => setRoute("outbound")}
+          >
+            outbound scan
+          </button>
+          <button
+            className={`pill-tab flex-1 justify-center ${route === "inbound" ? "active" : ""}`}
+            onClick={() => setRoute("inbound")}
+          >
+            inbound apply
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <input className="input" placeholder="founder name *" value={founderName} onChange={(e) => setFounderName(e.target.value)} />
+          <input className="input" placeholder="company name *" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+          <input className="input" placeholder="one-liner (optional)" value={companyOneLiner} onChange={(e) => setCompanyOneLiner(e.target.value)} />
+
+          {route === "outbound" && (
+            <>
+              <input className="input" placeholder="github username (optional)" value={githubUsername} onChange={(e) => setGithubUsername(e.target.value)} />
+              <input className="input" placeholder="website url (optional)" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} />
+              <input className="input" placeholder="x handle (optional)" value={xHandle} onChange={(e) => setXHandle(e.target.value)} />
+            </>
+          )}
+
+          {route === "inbound" && (
+            <textarea
+              className="input min-h-32"
+              placeholder="paste deck text / application text here"
+              value={deckMarkdown}
+              onChange={(e) => setDeckMarkdown(e.target.value)}
+            />
+          )}
+
+          {error && <p className="text-[13px] text-[var(--red)]">{error}</p>}
+
+          {busy && (
+            <div className="flex items-center gap-2">
+              <span className="sentiment-dot live bullish" />
+              <p className="label">running GitHub, launches, web, Tavily pulse in parallel…</p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <button className="btn" disabled={busy || !founderName || !companyName} onClick={submit}>
+              {busy ? "sourcing + screening…" : "run sourcing + screening"}
+            </button>
+            <p className="text-[12px] text-[var(--muted)]">Runs sourcing → scoring → traceability in one shot.</p>
+          </div>
+        </div>
       </div>
-
-      <input className="input" placeholder="founder name *" value={founderName} onChange={(e) => setFounderName(e.target.value)} />
-      <input className="input" placeholder="company name *" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
-      <input className="input" placeholder="one-liner (optional)" value={companyOneLiner} onChange={(e) => setCompanyOneLiner(e.target.value)} />
-
-      {route === "outbound" && (
-        <>
-          <input className="input" placeholder="github username (optional)" value={githubUsername} onChange={(e) => setGithubUsername(e.target.value)} />
-          <input className="input" placeholder="website url (optional)" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} />
-          <input className="input" placeholder="x handle (optional)" value={xHandle} onChange={(e) => setXHandle(e.target.value)} />
-        </>
-      )}
-
-      {route === "inbound" && (
-        <textarea
-          className="input min-h-32"
-          placeholder="paste deck text / application text here"
-          value={deckMarkdown}
-          onChange={(e) => setDeckMarkdown(e.target.value)}
-        />
-      )}
-
-      {error && <p className="text-[13px] text-[var(--red)]">{error}</p>}
-
-      <button className="btn w-fit" disabled={busy || !founderName || !companyName} onClick={submit}>
-        {busy ? "sourcing + screening…" : "run sourcing + screening"}
-      </button>
     </div>
   );
 }

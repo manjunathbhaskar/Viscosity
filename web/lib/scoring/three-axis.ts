@@ -7,31 +7,59 @@ import type { AxisScore, Claim, ProcessSignal, ScoredInterval, ThreeAxisScore } 
 import { computeColdStartScore, deriveProcessSignals, isColdStart } from "./cold-start";
 import { clamp, intervalHalfWidth, weightedValence } from "./shared";
 
-const MARKET_POSITIVE = /\b(growing market|large tam|expanding|tailwind|underserved|land grab|category creation)\b/i;
-const MARKET_NEGATIVE = /\b(shrinking|saturated|commodit(y|ized)|crowded|regulatory headwind|declining)\b/i;
+// Broad on purpose: real web/news text about a market almost never uses the
+// literal phrase "growing market" — it says "expected to reach $X billion,"
+// "CAGR of N%," "increasing demand," etc. Narrow patterns here just starve
+// the market axis of any evidence (every claim falls through to the 50/wide
+// "no evidence yet" default), which looks broken even though the math is
+// fine — the real bug was too little signal ever reaching it. See also the
+// dedicated market-signal pulse query in agent/tools/founder-enrichment.ts,
+// which now actually fetches market-shaped content for this to classify.
+const MARKET_POSITIVE =
+  /\b(growing market|large tam|expanding market|expanding demand|tailwind|underserved|land grab|category creation|market (size|growth)|billion(-|\s)dollar market|cagr|increasing demand|rising demand|growing demand|market opportunity|total addressable market|fast(-|\s)growing (industry|sector|market)|emerging (market|category)|industry (growth|tailwind))\b/i;
+const MARKET_NEGATIVE =
+  /\b(shrinking|saturated|commodit(y|ized)|crowded market|regulatory headwind|declining market|market (decline|contraction)|well(-|\s)funded (rivals|competitors)|fragmented market|price war|race to the bottom|winner(-|\s)take(s)?(-|\s)all)\b/i;
 
-const FIT_POSITIVE = /\b(paying customers?|retention|repeat usage|organic pull|waitlist|design partner|signed pilot)\b/i;
-const FIT_NEGATIVE = /\b(no users|churned|pivot(ed)?|no demand|feature creep|unclear icp)\b/i;
+const FIT_POSITIVE =
+  /\b(paying customers?|retention|repeat usage|organic pull|waitlist|design partner|signed pilot|product(-|\s)market fit|strong adoption|growing user base|word of mouth|customers? love|high engagement)\b/i;
+const FIT_NEGATIVE =
+  /\b(no users|churned|pivot(ed)?|no demand|feature creep|unclear icp|low engagement|struggling to find|hasn'?t found (product|market) fit|failed to gain traction)\b/i;
 
-function claimValence(claim: Claim, positive: RegExp, negative: RegExp): { value: number; weight: number } | null {
+// Every claim reaching this function is already known to be on-topic (it was
+// either explicitly fetched by a dedicated market/product-fit pulse query —
+// see founder-enrichment.ts — or matched the sentiment regex below via
+// classifyClaim). So a claim that doesn't hit either regex is NOT dropped:
+// free-form web text about a real market almost never contains a clean
+// sentiment trigger phrase ("market projected to grow 40%, $74B by 2030"
+// matches neither "growing market" nor "declining market" literally), and
+// silently discarding it is what left this axis pinned at the zero-evidence
+// default for every founder. It counts as neutral evidence at reduced
+// weight instead — narrows the interval a little, without asserting a
+// sentiment the text doesn't actually support.
+function claimValence(claim: Claim, positive: RegExp, negative: RegExp): { value: number; weight: number } {
   const isPos = positive.test(claim.text);
   const isNeg = negative.test(claim.text);
-  if (!isPos && !isNeg) return null;
-  const value = isPos && !isNeg ? 0.5 + 0.5 * claim.confidence : isNeg && !isPos ? 0.5 - 0.5 * claim.confidence : 0.5;
-  return { value, weight: claim.confidence };
+  if (isPos && !isNeg) return { value: 0.5 + 0.5 * claim.confidence, weight: claim.confidence };
+  if (isNeg && !isPos) return { value: 0.5 - 0.5 * claim.confidence, weight: claim.confidence };
+  return { value: 0.5, weight: claim.confidence * 0.4 };
 }
 
 function scoreFromClaims(claims: Claim[], positive: RegExp, negative: RegExp, basisLabel: string): AxisScore {
-  const entries = claims.map((c) => claimValence(c, positive, negative)).filter((e): e is { value: number; weight: number } => e !== null);
-
-  if (entries.length === 0) {
+  if (claims.length === 0) {
     return { score: 50, low: 10, high: 90, trend: "flat", confidence: 0.1, basis: `no evidence yet — ${basisLabel}` };
   }
+
+  const entries = claims.map((c) => claimValence(c, positive, negative));
 
   const normalized = weightedValence(entries);
   const score = Math.round(normalized * 100);
   const halfWidth = intervalHalfWidth(entries.length, { floor: 6, ceiling: 40, decayPerUnit: 3 });
-  const confidence = clamp(0.2 + entries.length * 0.08, 0.2, 0.95);
+  // Steeper than the old 0.07/claim slope: the dedicated market/product pulse
+  // queries (agent/tools/founder-enrichment.ts) only ever return ~3-5
+  // findings each, so the old curve capped confidence around 40% even for a
+  // fully-evidenced axis — every deal looked equally "unsure" regardless of
+  // how much real signal actually came back.
+  const confidence = clamp(0.2 + entries.length * 0.13, 0.2, 0.92);
 
   return {
     score,
@@ -76,7 +104,16 @@ function identityToAxis(identitySignals: ProcessSignal[], label: string): AxisSc
 // agent/crew/pipeline.ts to split enrichment claims before scoring. Falls
 // back to "founder" (process/shipping evidence) since that's what
 // founder-enrichment.ts predominantly produces.
+//
+// The "Market signal:" / "Product signal:" prefixes come from dedicated
+// pulse queries in founder-enrichment.ts that already searched specifically
+// for market-sizing / product-adoption content — we know the topic for
+// those without needing the sentiment regex to also happen to match, which
+// is what previously starved these two axes of any evidence at all (see
+// claimValence in this file for the other half of that fix).
 export function classifyClaim(claim: Claim): "market" | "idea" | "founder" {
+  if (claim.text.startsWith("Market signal:")) return "market";
+  if (claim.text.startsWith("Product signal:")) return "idea";
   if (MARKET_POSITIVE.test(claim.text) || MARKET_NEGATIVE.test(claim.text)) return "market";
   if (FIT_POSITIVE.test(claim.text) || FIT_NEGATIVE.test(claim.text)) return "idea";
   return "founder";

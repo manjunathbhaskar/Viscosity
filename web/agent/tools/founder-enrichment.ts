@@ -16,6 +16,7 @@ import { searchHackerNewsLaunches, searchProductHuntLaunches, type LaunchHit } f
 import { fetchXSignal, type XSignal } from "./x";
 import { searchArxivByAuthor, type Paper } from "./papers";
 import { searchPatentsByInventor, type PatentHit } from "./patents";
+import { tavilyPulse } from "./tavily";
 import { uploadDossier, type DiligenceUploadResult } from "@/lib/diligence-bridge";
 import type { Claim, Source } from "@/lib/types";
 import { newId } from "@/lib/memory/schema";
@@ -217,6 +218,101 @@ function patentsToClaimsAndSources(founderId: string, patents: PatentHit[]): { c
   return { claims, sources };
 }
 
+async function tavilyToClaimsAndSources(founderId: string, founderName: string, companyName: string): Promise<{ claims: Claim[]; sources: Source[] }> {
+  const now = new Date().toISOString();
+  const query = `${founderName} ${companyName} traction OR release OR launch`;
+  const pulse = await tavilyPulse(query, 4);
+
+  if (!pulse.findings.length) return { claims: [], sources: [] };
+
+  const source: Source = {
+    id: newId("src"),
+    url: `tavily://${encodeURIComponent(query)}`,
+    kind: "web_pulse",
+    fetchedAt: now,
+    title: `Web pulse: ${query}`,
+  };
+
+  const claims: Claim[] = pulse.findings.map((f) => ({
+    id: newId("claim"),
+    subjectId: founderId,
+    subjectType: "founder",
+    text: `External signal: ${f.title} — ${f.snippet}`,
+    sourceId: source.id,
+    confidence: pulse.source === "live" ? 0.55 : 0.4,
+    timestamp: now,
+  }));
+
+  return { claims, sources: [source] };
+}
+
+// Dedicated market-signal pulse — separate from tavilyToClaimsAndSources
+// above, which searches for founder/company traction and almost never turns
+// up market-sizing or competitive-landscape language. Without this, the
+// Market axis (lib/scoring/three-axis.ts) never receives any claims to
+// classify and permanently defaults to the neutral 50/wide-interval "no
+// evidence yet" case for every founder — which looks broken even though the
+// scoring math itself is fine.
+async function marketPulseToClaimsAndSources(founderId: string, companyName: string): Promise<{ claims: Claim[]; sources: Source[] }> {
+  const now = new Date().toISOString();
+  const query = `${companyName} market size OR competitors OR total addressable market OR industry growth`;
+  const pulse = await tavilyPulse(query, 4);
+
+  if (!pulse.findings.length) return { claims: [], sources: [] };
+
+  const source: Source = {
+    id: newId("src"),
+    url: `tavily://${encodeURIComponent(query)}`,
+    kind: "web_pulse",
+    fetchedAt: now,
+    title: `Market pulse: ${query}`,
+  };
+
+  const claims: Claim[] = pulse.findings.map((f) => ({
+    id: newId("claim"),
+    subjectId: founderId,
+    subjectType: "founder",
+    text: `Market signal: ${f.title} — ${f.snippet}`,
+    sourceId: source.id,
+    confidence: pulse.source === "live" ? 0.55 : 0.4,
+    timestamp: now,
+  }));
+
+  return { claims, sources: [source] };
+}
+
+// Dedicated product-fit pulse — mirrors marketPulseToClaimsAndSources above,
+// but for the Idea-vs-Market axis. Without this, that axis has the identical
+// problem the market axis had: nothing in the founder-traction/GitHub/HN
+// claims naturally discusses customer adoption, so it never gets evidence.
+async function productFitPulseToClaimsAndSources(founderId: string, companyName: string): Promise<{ claims: Claim[]; sources: Source[] }> {
+  const now = new Date().toISOString();
+  const query = `${companyName} customers OR users OR retention OR reviews OR adoption`;
+  const pulse = await tavilyPulse(query, 4);
+
+  if (!pulse.findings.length) return { claims: [], sources: [] };
+
+  const source: Source = {
+    id: newId("src"),
+    url: `tavily://${encodeURIComponent(query)}`,
+    kind: "web_pulse",
+    fetchedAt: now,
+    title: `Product pulse: ${query}`,
+  };
+
+  const claims: Claim[] = pulse.findings.map((f) => ({
+    id: newId("claim"),
+    subjectId: founderId,
+    subjectType: "founder",
+    text: `Product signal: ${f.title} — ${f.snippet}`,
+    sourceId: source.id,
+    confidence: pulse.source === "live" ? 0.55 : 0.4,
+    timestamp: now,
+  }));
+
+  return { claims, sources: [source] };
+}
+
 function buildDossierMarkdown(input: FounderEnrichmentInput, claims: Claim[]): string {
   const lines = [
     `# Founder Dossier — ${input.founderName}`,
@@ -243,7 +339,7 @@ export async function enrichFounder(input: FounderEnrichmentInput): Promise<Foun
     githubWasDiscovered = Boolean(githubUsername);
   }
 
-  const [gh, site, hnHits, phHits, xSignal, papers, patents] = await Promise.all([
+  const [gh, site, hnHits, phHits, xSignal, papers, patents, tavily, marketPulse, productPulse] = await Promise.all([
     githubUsername ? fetchGithubSignal(githubUsername) : Promise.resolve(null),
     input.websiteUrl ? fetchWebsiteExtract(input.websiteUrl) : Promise.resolve(null),
     searchHackerNewsLaunches(input.companyName),
@@ -251,6 +347,9 @@ export async function enrichFounder(input: FounderEnrichmentInput): Promise<Foun
     input.xHandle ? fetchXSignal(input.xHandle) : Promise.resolve(null),
     searchArxivByAuthor(input.founderName),
     searchPatentsByInventor(input.founderName),
+    tavilyToClaimsAndSources(input.founderId, input.founderName, input.companyName),
+    marketPulseToClaimsAndSources(input.founderId, input.companyName),
+    productFitPulseToClaimsAndSources(input.founderId, input.companyName),
   ]);
 
   let claims: Claim[] = [];
@@ -286,6 +385,18 @@ export async function enrichFounder(input: FounderEnrichmentInput): Promise<Foun
     const r = patentsToClaimsAndSources(input.founderId, patents);
     claims = claims.concat(r.claims);
     sources = sources.concat(r.sources);
+  }
+  if (tavily) {
+    claims = claims.concat(tavily.claims);
+    sources = sources.concat(tavily.sources);
+  }
+  if (marketPulse) {
+    claims = claims.concat(marketPulse.claims);
+    sources = sources.concat(marketPulse.sources);
+  }
+  if (productPulse) {
+    claims = claims.concat(productPulse.claims);
+    sources = sources.concat(productPulse.sources);
   }
 
   const dossierMarkdown = buildDossierMarkdown(input, claims);

@@ -18,6 +18,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const dealbreakers = m.dealbreakers.filter((db) => db.dealId === deal.id);
   const traceability = m.traceability.filter((t) => t.dealId === deal.id);
   const memo = m.memos.filter((mm) => mm.dealId === deal.id).sort((a, b) => (a.generatedAt < b.generatedAt ? 1 : -1))[0] ?? null;
+  const simulations = m.simulations.filter((s) => s.dealId === deal.id).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+  const momentumPlan = m.momentumPlans.filter((p) => p.dealId === deal.id).sort((a, b) => (a.generatedAt < b.generatedAt ? 1 : -1))[0] ?? null;
 
-  return NextResponse.json({ deal, founder, company, claims, sources, scoreRecord, trustScores, dealbreakers, traceability, memo });
+  return NextResponse.json({
+    deal,
+    founder,
+    company,
+    claims,
+    sources,
+    scoreRecord,
+    trustScores,
+    dealbreakers,
+    traceability,
+    memo,
+    simulations,
+    momentumPlan,
+  });
 }

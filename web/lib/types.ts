@@ -13,7 +13,10 @@ export type SourceKind =
   | "web"
   | "deck"
   | "interview"
-  | "diligence_engine"; // derived from a diligence-service route
+  | "diligence_engine"
+  | "web_pulse"
+  | "simulation"
+  | "momentum_plan"; // derived from internal simulators (adversarial swarm, momentum engine)
 
 export interface Source {
   id: string;
@@ -254,4 +257,72 @@ export interface InvestmentMemo {
   sections: MemoSectionContent[];
   gaps: MemoGap[];
   generatedAt: string;
+}
+
+// ── Simulation + Momentum Planning ───────────────────────────────────────
+
+export type SimulationStatus = "queued" | "running" | "succeeded" | "failed";
+
+export interface SimulationScenario {
+  title: string;
+  likelihood: number; // 0..1
+  upside: string;
+  downside: string;
+  turningPoints: string[];
+  actions: string[];
+  confidence: number; // 0..1
+}
+
+export interface SimulationFeedEvent {
+  id: string;
+  agent: string;
+  role: string;
+  sentiment: "bullish" | "bearish" | "neutral";
+  confidence: number; // 0..1
+  text: string;
+  url?: string;
+  at: string;
+}
+
+export interface SimulationRecord {
+  id: string;
+  dealId?: string;
+  topic: string;
+  status: SimulationStatus;
+  provider: "mock" | "swarm";
+  scenarios: SimulationScenario[];
+  feed: SimulationFeedEvent[];
+  activeAgents: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Momentum Plan ────────────────────────────────────────────────────────
+// Not a generic GTM/marketing plan — a short, evidence-driven action list
+// aimed at closing whichever cold-start process signal (see ProcessSignalType)
+// is weakest or least-evidenced for a given founder, blended with one or two
+// live external signals. Horizon and content are both derived from the
+// founder's own claim evidence, not a fixed template.
+
+export type MomentumActionChannel = "linkedin" | "x" | "email" | "community" | "content" | "product" | "research";
+
+export interface MomentumAction {
+  id: string;
+  title: string;
+  channel: MomentumActionChannel;
+  rationale: string;
+  expectedOutcome: string;
+  dueAt?: string;
+  linkedSignal?: ProcessSignalType; // which cold-start signal this action targets, if any
+  sourceIds?: string[]; // trace back to evidence claims/sources
+}
+
+export interface MomentumPlan {
+  id: string;
+  dealId?: string;
+  summary: string;
+  horizonDays: number; // derived from evidence thinness, not fixed
+  actions: MomentumAction[];
+  generatedAt: string;
+  source: "mock" | "momentum-engine";
 }

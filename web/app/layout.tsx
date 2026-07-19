@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, IBM_Plex_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 import DealSwitcher from "@/components/deal-switcher";
+import SystemRibbon from "@/components/system-ribbon";
 import "./globals.css";
 
 const sans = Geist({
@@ -16,24 +17,23 @@ const mono = IBM_Plex_Mono({
   variable: "--font-mono",
 });
 
-const serif = Instrument_Serif({
+const heading = Space_Grotesk({
   subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+  weight: ["500", "600", "700"],
   variable: "--font-serif",
 });
 
 export const metadata: Metadata = {
-  title: "The VC Brain",
+  title: "Viscosity — fluid conviction for VCs",
   description:
-    "Sourcing → Screening → Diligence → Decision. First founder signal to a confident $100K check decision in 24 hours.",
+    "Fluid conviction for VCs. Pulse → Simulation → Diligence → Decision — from first founder signal to a confident check.",
 };
 
 const NAV = [
-  { href: "/dashboard", label: "decision-ready queue" },
-  { href: "/dashboard/source", label: "sourcing" },
+  { href: "/dashboard", label: "deals" },
+  { href: "/dashboard/source", label: "source" },
   { href: "/dashboard/memory", label: "memory" },
-  { href: "/dashboard/validate", label: "predictions" },
+  { href: "/dashboard/validate", label: "models" },
 ];
 
 export default function RootLayout({
@@ -42,36 +42,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${heading.variable}`}>
       <body>
         <header>
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5">
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="h-[15px] w-[15px] rounded-full bg-[var(--charcoal)]" />
-              <span className="text-[18px] font-semibold tracking-tight">
-                the vc brain
+              <span className="h-[15px] w-[15px] rounded-full bg-[var(--accent)]" />
+              <span className="serif text-[19px] font-semibold tracking-tight">
+                viscosity
               </span>
-              <span className="label ml-1 hidden sm:inline">
-                sourcing → screening → diligence → decision
-              </span>
+              <span className="label ml-1 hidden lg:inline">fluid conviction for VCs</span>
             </Link>
-            <nav className="flex items-center gap-6">
-              <DealSwitcher />
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="group flex items-center gap-1.5 text-[13px]">
-                  <span className="text-[var(--accent)]">→</span>
-                  <span className="text-[var(--ink)] transition-opacity group-hover:opacity-60">
-                    {n.label}
-                  </span>
-                </Link>
-              ))}
-            </nav>
+            <div className="flex items-center gap-3">
+              <SystemRibbon />
+              <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                <DealSwitcher />
+                {NAV.map((n) => (
+                  <Link key={n.href} href={n.href} className="group flex items-center gap-1.5 text-[13px]">
+                    <span className="text-[var(--accent)]">→</span>
+                    <span className="text-[var(--ink)] transition-opacity group-hover:opacity-60">
+                      {n.label}
+                    </span>
+                  </Link>
+                ))}
+              </nav>
+            </div>
           </div>
         </header>
         <main className="mx-auto max-w-6xl px-6 py-6">{children}</main>
         <footer className="mx-auto flex max-w-6xl items-center justify-between px-6 pb-8 pt-4">
-          <p className="mono text-[11px] text-[var(--faint)]">v0.1.0 · VCBRAIN_MOCK ready</p>
-          <p className="label">maschmeyer group track — hack-nation global ai hackathon</p>
+          <p className="mono text-[11px] text-[var(--faint)]">v0.2.0 · viscosity stack</p>
+          <p className="label">private build · agentic swarm + tavily + elevenlabs</p>
         </footer>
       </body>
     </html>
