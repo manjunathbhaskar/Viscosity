@@ -50,6 +50,10 @@ async function runSeed(): Promise<void> {
       m.memos.push(memo);
       const d = m.deals.find((dd) => dd.id === result.deal.id);
       if (d) d.stage = "decision_ready";
+      if (spec.linkedinUrl) {
+        const f = m.founders.find((ff) => ff.id === result.founder.id);
+        if (f) f.linkedinUrl = spec.linkedinUrl;
+      }
     });
   }
 }

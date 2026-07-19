@@ -50,9 +50,11 @@ export interface SourceDealResult {
 
 export async function sourceAndScreenDeal(input: SourceDealInput): Promise<SourceDealResult> {
   const now = new Date().toISOString();
-  const founderId = newId("founder");
-  const companyId = newId("company");
-  const dealId = newId("deal");
+  const isMock = process.env.VCBRAIN_MOCK === "1";
+  const seed = isMock ? `${input.founderName}::${input.companyName}` : undefined;
+  const founderId = newId("founder", seed);
+  const companyId = newId("company", seed);
+  const dealId = newId("deal", seed);
 
   const founder: Founder = {
     id: founderId,

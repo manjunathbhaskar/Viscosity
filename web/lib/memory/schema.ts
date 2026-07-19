@@ -64,6 +64,14 @@ export function emptyMemory(): MemoryState {
   };
 }
 
-export function newId(prefix: string): string {
-  return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+let idCounter = 0;
+
+export function newId(prefix: string, seed?: string): string {
+  if (seed) {
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) hash = ((hash << 5) - hash + seed.charCodeAt(i)) | 0;
+    return `${prefix}_${Math.abs(hash).toString(36).padStart(8, "0")}`;
+  }
+  idCounter++;
+  return `${prefix}_${Date.now().toString(36)}${idCounter.toString(36).padStart(4, "0")}${Math.random().toString(36).slice(2, 6)}`;
 }

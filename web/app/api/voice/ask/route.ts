@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { generateAnswerText } from "@/lib/voice-briefing";
 import { textToSpeechBuffer, hasElevenLabs } from "@/lib/elevenlabs";
+import { ensureDemoSeed } from "@/lib/memory/seed";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+  await ensureDemoSeed();
   const { dealId, question } = await req.json();
   if (!dealId || !question) {
     return NextResponse.json({ error: "dealId and question required" }, { status: 400 });

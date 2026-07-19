@@ -18,6 +18,7 @@ export interface DemoFounderSpec {
   githubUsername?: string;
   websiteUrl?: string;
   xHandle?: string;
+  linkedinUrl?: string;
 }
 
 export const DEMO_FOUNDERS: DemoFounderSpec[] = [
@@ -29,6 +30,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     githubUsername: "ada-cortex-demo",
     websiteUrl: "https://northwindvectors.demo",
     xHandle: "ada_cortex_demo",
+    linkedinUrl: "https://linkedin.com/in/ada-cortex",
   },
   {
     founderName: "Kenji Osei",
@@ -43,6 +45,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     companyName: "Helix Bio",
     companyOneLiner: "AI-assisted protein folding pipeline for biotech R&D teams",
     route: "sourced",
+    linkedinUrl: "https://linkedin.com/in/priyanka-sridhar",
     // Deliberately no githubUsername — demonstrates agentic discovery:
     // Sourcing searches GitHub for "Helix Bio" itself and finds a real
     // candidate before falling back to a cold start. Also has arXiv papers
@@ -56,6 +59,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     route: "sourced",
     githubUsername: "vantage-robotics-demo",
     websiteUrl: "https://vantagerobotics.demo",
+    linkedinUrl: "https://linkedin.com/in/marco-delacroix",
     // Website fixture text mentions an unresolved co-founder dispute — the
     // one demo founder that actually trips the Dealbreaker Scanner, so the
     // demo shows what a red deal looks like, not just clean ones.

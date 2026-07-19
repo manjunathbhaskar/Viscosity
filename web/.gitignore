@@ -6,3 +6,4 @@ data/runtime
 .env
 .env.local
 *.log
+package-lock.json

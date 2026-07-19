@@ -43,6 +43,7 @@ export interface Claim {
 export interface Founder {
   id: string;
   name: string;
+  linkedinUrl?: string;
   companyIds: string[];
   sourceIds: string[];
   createdAt: string;
