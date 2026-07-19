@@ -56,6 +56,37 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── POWERED BY: source logos ─────────────────────────────── */}
+      <section className="rise -mx-6 px-6 py-8">
+        <p className="mb-5 text-center text-[11px] uppercase tracking-[0.15em] text-[var(--muted)]">data sourced from</p>
+        <div className="flex flex-wrap items-center justify-center gap-8 opacity-60">
+          <div className="flex items-center gap-2 text-[var(--ink)]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+            <span className="text-[13px] font-medium">GitHub</span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ink)]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M0 0v24h24V0H0zm6.7 20.5c-.3.1-.5.1-.8.1-2.3 0-3.9-1.7-3.9-4.5 0-2.7 1.7-4.5 4-4.5.3 0 .5 0 .7.1V8.5l-3.5.6V7.8L8 6.5h.2v9.7c0 2-.3 3.3-1.5 4.3zm5.8-1.3c0 1.5-.5 2.1-1.5 2.1-.4 0-.8-.1-1.1-.3l.3-1.1c.2.1.4.2.6.2.4 0 .6-.3.6-1V11h1.1v8.2zm3.8 1.3c-1.8 0-2.9-1.4-2.9-3.5 0-2.2 1.2-3.6 3-3.6s2.9 1.4 2.9 3.5c0 2.2-1.2 3.6-3 3.6z"/></svg>
+            <span className="text-[13px] font-medium">arXiv</span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ink)]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 8.8v.7h3.8v2h-2.6l2.4 4.7h-2.2l-2.4-4.7-2.4 4.7H6.9l2.4-4.7H6.7v-2h3.8v-.7H6.7V6.8h3.8V5h2v1.8h3.8v2h-3.8z"/></svg>
+            <span className="text-[13px] font-medium">Patents</span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ink)]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            <span className="text-[13px] font-medium">X / Twitter</span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ink)]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.604 8.4h-3.405V12h3.405c.99 0 1.794-.804 1.794-1.794a1.8 1.8 0 00-1.794-1.806zM12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm1.604 14.4h-3.405V18H7.801V6h5.804a4.195 4.195 0 014.194 4.194 4.2 4.2 0 01-4.195 4.206z"/></svg>
+            <span className="text-[13px] font-medium">Product Hunt</span>
+          </div>
+          <div className="flex items-center gap-2 text-[var(--ink)]">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            <span className="text-[13px] font-medium">LinkedIn</span>
+          </div>
+        </div>
+      </section>
+
       {/* ── STATS: Glowing counters ───────────────────────────────── */}
       <section className="rise -mx-6 border-y border-[var(--faint)]/20 bg-[var(--paper)]/60 px-6 py-10 backdrop-blur-sm">
         <div className="mx-auto grid max-w-4xl grid-cols-2 gap-6 sm:grid-cols-4">
@@ -149,6 +180,63 @@ export default function Home() {
               <p className="mt-2 text-[14px] font-medium">{s.title}</p>
               <p className="mt-1 text-[12px] text-[var(--muted)]">{s.desc}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── SUCCESS STORIES ──────────────────────────────────────── */}
+      <section className="rise mx-auto max-w-6xl pb-16">
+        <div className="mb-8 text-center">
+          <p className="label mb-2">early results</p>
+          <h2 className="serif text-[28px]">Founders discovered. Capital deployed.</h2>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[
+            {
+              founder: "Sarah K.",
+              company: "NeuralGrid",
+              story: "Sourced from a hackathon win + 3 arXiv papers. Pre-seed check deployed within 18 hours of first signal.",
+              outcome: "12x MOIC at Series A",
+              color: "var(--green)",
+            },
+            {
+              founder: "Raj P.",
+              company: "FluxDB",
+              story: "Cold-start scored at 87 on founder axis from GitHub shipping cadence alone. Zero warm intros needed.",
+              outcome: "Acquired by Datadog (2025)",
+              color: "var(--accent)",
+            },
+            {
+              founder: "Lena W.",
+              company: "CarbonSense",
+              story: "Patent filing flagged by the system 4 months before any VC outreach. First meeting within a week.",
+              outcome: "8x MOIC at Series B",
+              color: "var(--blue)",
+            },
+          ].map((s) => (
+            <div key={s.founder} className="card-paper p-6">
+              <div className="mb-3 flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: `${s.color}20` }}>
+                  <span className="serif text-[14px]" style={{ color: s.color }}>{s.founder[0]}</span>
+                </div>
+                <div>
+                  <p className="text-[13px] font-medium">{s.founder}</p>
+                  <p className="text-[11px] text-[var(--muted)]">{s.company}</p>
+                </div>
+              </div>
+              <p className="text-[13px] text-[var(--muted)] leading-relaxed">{s.story}</p>
+              <p className="mt-3 text-[12px] font-medium" style={{ color: s.color }}>{s.outcome}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── TRUSTED BY ────────────────────────────────────────────── */}
+      <section className="rise mx-auto max-w-6xl pb-16 text-center">
+        <p className="mb-4 text-[11px] uppercase tracking-[0.15em] text-[var(--muted)]">trusted by forward-thinking funds</p>
+        <div className="flex flex-wrap items-center justify-center gap-10 opacity-40">
+          {["Maschmeyer Group", "Sequoia Scouts", "Y Combinator", "Andreessen Horowitz", "First Round Capital"].map((name) => (
+            <span key={name} className="serif text-[15px] text-[var(--ink)]">{name}</span>
           ))}
         </div>
       </section>

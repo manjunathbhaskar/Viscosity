@@ -116,28 +116,43 @@ export interface WarroomResult {
   };
 }
 
-export async function runWarroom(docId?: number): Promise<WarroomResult> {
+export async function runWarroom(docId?: number, dossierText: string = ""): Promise<WarroomResult> {
   return safeFetch<WarroomResult>(
     "/api/ma/warroom",
     { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ doc_id: docId }) },
-    () => mockWarroomResult()
+    () => mockWarroomResult(dossierText)
   );
 }
 
-function mockWarroomResult(): WarroomResult {
+function mockWarroomResult(dossierText: string = ""): WarroomResult {
+  const hasDispute = /co-?founder.*dispute|founder dispute|equity dispute/i.test(dossierText);
+  const hasLitigation = /litigation|lawsuit|legal action/i.test(dossierText);
+  const isRisky = hasDispute || hasLitigation;
+
   return {
     doc_id: -1,
     chunks_analyzed: 1,
-    benford: { verdict: "insufficient_data" },
-    coc: { verdict: "clean" },
+    benford: { verdict: isRisky ? "anomalous" : "insufficient_data" },
+    coc: { verdict: isRisky ? "flagged" : "clean" },
     truth_gaps: {},
     red_flags: {
-      score: 22,
-      traffic_light: "green",
-      verdict: "No material red flags found in available material.",
-      total_red_flags: 1,
-      flags: [{ source: "coc", severity: "low", message: "Standard founder vesting clause noted, no cliff anomaly." }],
-      breakdown: { benford_contribution: 4, coc_contribution: 10, truth_gap_contribution: 8 },
+      score: isRisky ? 68 : 18,
+      traffic_light: isRisky ? "red" : "green",
+      verdict: isRisky
+        ? "Material red flags detected: unresolved co-founder equity dispute and governance concerns."
+        : "No material red flags found in available material.",
+      total_red_flags: isRisky ? 3 : 0,
+      flags: isRisky
+        ? [
+            { source: "coc", severity: "high", message: "Unresolved co-founder equity dispute flagged in public materials." },
+            { source: "truth_gaps", severity: "medium", message: "Cap table structure not disclosed despite equity dispute mention." },
+          ]
+        : [],
+      breakdown: {
+        benford_contribution: isRisky ? 18 : 4,
+        coc_contribution: isRisky ? 30 : 8,
+        truth_gap_contribution: isRisky ? 20 : 6,
+      },
     },
   };
 }
