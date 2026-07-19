@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 import DealSwitcher from "@/components/deal-switcher";
+import NavLinks from "@/components/nav-links";
 import SystemRibbon from "@/components/system-ribbon";
 import WaterMark from "@/components/water-mark";
 import "./globals.css";
@@ -30,15 +31,6 @@ export const metadata: Metadata = {
     "Fluid conviction for VCs. Pulse → Simulation → Diligence → Decision — from first founder signal to a confident check.",
 };
 
-const NAV = [
-  { href: "/dashboard", label: "deals" },
-  { href: "/dashboard/source", label: "source" },
-  { href: "/dashboard/discover", label: "discover" },
-  { href: "/dashboard/digest", label: "digest" },
-  { href: "/dashboard/memory", label: "memory" },
-  { href: "/dashboard/validate", label: "models" },
-];
-
 export default function RootLayout({
   children,
 }: {
@@ -47,6 +39,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable} ${heading.variable}`}>
       <body>
+        <div className="glow-spot glow-spot-1" />
+        <div className="glow-spot glow-spot-2" />
+        <div className="noise-overlay" />
         <header>
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5">
             <Link href="/" className="flex items-center gap-2.5">
@@ -58,17 +53,8 @@ export default function RootLayout({
             </Link>
             <div className="flex items-center gap-3">
               <SystemRibbon />
-              <nav className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-                <DealSwitcher />
-                {NAV.map((n) => (
-                  <Link key={n.href} href={n.href} className="group flex items-center gap-1.5 text-[13px]">
-                    <span className="text-[var(--accent)]">→</span>
-                    <span className="text-[var(--ink)] transition-opacity group-hover:opacity-60">
-                      {n.label}
-                    </span>
-                  </Link>
-                ))}
-              </nav>
+              <DealSwitcher />
+              <NavLinks />
             </div>
           </div>
         </header>

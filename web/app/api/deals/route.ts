@@ -23,6 +23,7 @@ export async function GET() {
       return {
         id: d.id,
         founderName: founder?.name ?? "unknown",
+        founderLinkedin: founder?.linkedinUrl ?? null,
         companyName: company?.name ?? "unknown",
         stage: d.stage,
         route: d.route,

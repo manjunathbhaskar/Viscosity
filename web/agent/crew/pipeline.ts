@@ -50,9 +50,11 @@ export interface SourceDealResult {
 
 export async function sourceAndScreenDeal(input: SourceDealInput): Promise<SourceDealResult> {
   const now = new Date().toISOString();
-  const founderId = newId("founder");
-  const companyId = newId("company");
-  const dealId = newId("deal");
+  const isMock = process.env.VCBRAIN_MOCK === "1";
+  const seed = isMock ? `${input.founderName}::${input.companyName}` : undefined;
+  const founderId = newId("founder", seed);
+  const companyId = newId("company", seed);
+  const dealId = newId("deal", seed);
 
   const founder: Founder = {
     id: founderId,
@@ -114,7 +116,7 @@ export async function sourceAndScreenDeal(input: SourceDealInput): Promise<Sourc
 
   // Diligence: Red Flag Score + Dealbreaker Scanner against the uploaded material.
   const docId = enrichment.upload.doc_id;
-  const [warroom, dealbreakerScan] = await Promise.all([runWarroom(docId), scanDealbreakers(docId, enrichment.dossierMarkdown)]);
+  const [warroom, dealbreakerScan] = await Promise.all([runWarroom(docId, enrichment.dossierMarkdown), scanDealbreakers(docId, enrichment.dossierMarkdown)]);
 
   const dealbreakers: DealbreakerFlag[] = dealbreakerScan.result.critical_findings.map((f) => ({
     id: newId("flag"),

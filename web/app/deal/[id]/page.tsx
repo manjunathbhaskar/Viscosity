@@ -57,7 +57,7 @@ interface DealDetail {
     thesisFit?: { fits: boolean; score: number; reasons: string[] };
     validatorFindings?: { check: string; passed: boolean; detail: string }[];
   };
-  founder: { id: string; name: string } | null;
+  founder: { id: string; name: string; linkedinUrl?: string } | null;
   company: { id: string; name: string; oneLiner?: string } | null;
   claims: ClaimRow[];
   sources: SourceRow[];
@@ -174,7 +174,7 @@ const STAGE_BADGE: Record<string, string> = {
   invested: "badge-green",
 };
 
-const TABS = ["summary", "evidence", "traceability", "pulse", "simulation", "influence", "audio"] as const;
+const TABS = ["summary", "evidence", "traceability", "pulse", "simulation", "audio"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function DealDetailPage() {
@@ -376,7 +376,15 @@ export default function DealDetailPage() {
             <span className={`badge ${STAGE_BADGE[data.deal.stage] ?? "badge-gray"}`}>{data.deal.stage.replace("_", " ")}</span>
             <p className="label">{data.deal.route}</p>
           </div>
-          <h1 className="serif text-[30px]">{data.founder.name}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="serif text-[30px]">{data.founder.name}</h1>
+            {data.founder.linkedinUrl && (
+              <a href={data.founder.linkedinUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 rounded-full bg-[#0a66c2] px-3 py-1 text-[11px] font-medium text-white transition-all hover:scale-105 hover:shadow-lg">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                LinkedIn
+              </a>
+            )}
+          </div>
           <p className="text-[14px] text-[var(--muted)]">
             {data.company.name}
             {data.company.oneLiner ? ` — ${data.company.oneLiner}` : ""}
@@ -742,63 +750,6 @@ export default function DealDetailPage() {
                   </div>
                 </div>
               )}
-            </div>
-          )}
-        </section>
-      )}
-
-      {tab === "influence" && (
-        <section>
-          <div className="mb-3 flex items-center justify-between">
-            <p className="label">influence — momentum plan</p>
-            <button className="btn" onClick={generateMomentumPlan} disabled={generatingPlan}>
-              {generatingPlan ? "generating…" : data.momentumPlan ? "regenerate plan" : "generate plan"}
-            </button>
-          </div>
-          {planError && <p className="mb-2 text-[13px] text-[var(--red)]">{planError}</p>}
-          {!data.momentumPlan && !generatingPlan && <p className="label">no plan yet — targets this founder&apos;s weakest signal</p>}
-          {data.momentumPlan && (
-            <div className="flex flex-col gap-3">
-              <div className="card-paper p-3">
-                <p className="text-[13px]">{data.momentumPlan.summary}</p>
-                <p className="label mt-1">
-                  horizon {data.momentumPlan.horizonDays} days · source {data.momentumPlan.source}
-                </p>
-              </div>
-              <div className="relative flex flex-col gap-3 border-l-2 border-[var(--faint)] pl-5">
-                {data.momentumPlan.actions.map((a) => {
-                  const done = doneActions.has(a.id);
-                  const logged = loggedActions.has(a.id);
-                  return (
-                    <div key={a.id} className="card-paper relative p-3">
-                      <span
-                        className="absolute -left-[26px] top-4 h-2.5 w-2.5 rounded-full"
-                        style={{ background: done ? "var(--green)" : "var(--accent)" }}
-                      />
-                      <div className="mb-1 flex flex-wrap items-center gap-2">
-                        <span className={`text-[13px] font-medium ${done ? "line-through opacity-60" : ""}`}>{a.title}</span>
-                        <span className="badge badge-gray">{a.channel}</span>
-                        {a.linkedSignal && <span className="badge badge-amber">{a.linkedSignal.replace(/_/g, " ")}</span>}
-                        {a.dueAt && <span className="label">due {new Date(a.dueAt).toLocaleDateString()}</span>}
-                      </div>
-                      <p className="text-[12.5px] text-[var(--muted)]">{a.rationale}</p>
-                      <p className="label mt-1">{a.expectedOutcome}</p>
-                      <div className="mt-2 flex gap-2">
-                        <button
-                          className="btn-ghost text-[12px]"
-                          onClick={() => setDoneActions((prev) => new Set(prev).add(a.id))}
-                          disabled={done}
-                        >
-                          {done ? "done ✓" : "mark done"}
-                        </button>
-                        <button className="btn-ghost text-[12px]" onClick={() => logActionToTraceability(a)} disabled={logged}>
-                          {logged ? "logged ✓" : "log to traceability"}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
         </section>

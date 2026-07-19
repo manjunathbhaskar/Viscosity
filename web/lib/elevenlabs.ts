@@ -5,7 +5,7 @@ export function hasElevenLabs(): boolean {
 }
 
 function getVoiceId(): string {
-  return process.env.ELEVENLABS_VOICE_ID ?? "21m00Tcm4TlvDq8ikWAM";
+  return process.env.ELEVENLABS_VOICE_ID ?? "EXAVITQu4vr4xnSDxMaL";
 }
 
 export async function textToSpeechBuffer(text: string): Promise<Buffer | null> {
