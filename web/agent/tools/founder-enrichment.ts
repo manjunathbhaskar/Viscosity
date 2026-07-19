@@ -1,8 +1,8 @@
 // Founder enrichment — pulls whatever public signal exists (GitHub, launches,
 // website) and pushes it into the diligence service's document-shaped
 // ingestion endpoint, so the diligence engine has real material even when no
-// deck was uploaded. This is the convergence point between outbound-sourced
-// founders (no deck exists) and the diligence service's upload contract.
+// deck was uploaded. This is the convergence point between sourced founders
+// (no deck exists) and the diligence service's upload contract.
 //
 // Flow: run tools in parallel (github, website, launches) -> normalize each
 // hit into a Claim tied to a Source -> synthesize a markdown "dossier" (since

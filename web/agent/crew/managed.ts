@@ -7,7 +7,7 @@
 
 import { query, type AgentDefinition } from "@anthropic-ai/claude-agent-sdk";
 
-// "Sourcing agent (inbound + outbound)" — covers both scout-style discovery
+// "Sourcing agent (applied + sourced)" — covers both scout-style discovery
 // and lead resolution in a single named agent.
 export const CREW: Record<string, AgentDefinition> = {
   sourcing: {

@@ -68,7 +68,9 @@ export type DealStage =
   | "passed"
   | "invested";
 
-export type SourcingRoute = "inbound" | "outbound";
+// "applied" — a founder submitted a name/deck directly.
+// "sourced" — we found them ourselves (GitHub/X/website/papers/patents).
+export type SourcingRoute = "applied" | "sourced";
 
 // The per-application deal record in the Memory layer.
 export interface RedFlagSummary {
@@ -94,7 +96,7 @@ export interface DealRecord {
   founderId: string;
   companyId: string;
   route: SourcingRoute;
-  channelId?: string; // SourcingChannel, if outbound-sourced
+  channelId?: string; // SourcingChannel, if sourced (not applied)
   stage: DealStage;
   diligenceDocId?: number; // diligence-service document id, once uploaded
   redFlagScore?: RedFlagSummary;

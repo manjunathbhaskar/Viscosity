@@ -1,5 +1,5 @@
-// Sourcing → Screening orchestrator. Converges inbound apply (deck + name
-// minimum) and outbound scan (founder-enrichment.ts: GitHub/launches/website)
+// Sourcing → Screening orchestrator. Converges an applied deal (deck + name
+// minimum) and a sourced deal (founder-enrichment.ts: GitHub/launches/website)
 // into one Screening step: gather evidence, score, check dealbreakers, check
 // thesis fit, write to Memory, log for self-validation.
 
@@ -26,7 +26,7 @@ import type {
 } from "@/lib/types";
 
 export interface SourceDealInput {
-  route: "inbound" | "outbound";
+  route: "applied" | "sourced";
   founderName: string;
   companyName: string;
   companyOneLiner?: string;
@@ -34,7 +34,7 @@ export interface SourceDealInput {
   websiteUrl?: string;
   xHandle?: string;
   channelId?: string;
-  deckMarkdown?: string; // inbound apply: deck + name minimum
+  deckMarkdown?: string; // applied route: deck + name minimum
 }
 
 export interface SourceDealResult {
@@ -85,12 +85,12 @@ export async function sourceAndScreenDeal(input: SourceDealInput): Promise<Sourc
   const claims: Claim[] = [...enrichment.claims];
   const sources: Source[] = [...enrichment.sources];
 
-  // Inbound apply: deck + name minimum. Naive line-based claim extraction —
+  // Applied route: deck + name minimum. Naive line-based claim extraction —
   // every substantive line becomes a claim tied to the deck source, so the
-  // rest of the pipeline (scoring, trust, memo) treats inbound and outbound
+  // rest of the pipeline (scoring, trust, memo) treats applied and sourced
   // evidence identically.
   if (input.deckMarkdown) {
-    const deckSource: Source = { id: newId("src"), url: `deck://${founderId}`, kind: "deck", fetchedAt: now, title: "Inbound application deck" };
+    const deckSource: Source = { id: newId("src"), url: `deck://${founderId}`, kind: "deck", fetchedAt: now, title: "Application deck" };
     sources.push(deckSource);
     const lines = input.deckMarkdown
       .split("\n")

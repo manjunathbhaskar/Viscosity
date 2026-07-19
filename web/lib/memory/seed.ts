@@ -33,8 +33,8 @@ async function runSeed(): Promise<void> {
       websiteUrl: spec.websiteUrl,
       xHandle: spec.xHandle,
       deckMarkdown:
-        spec.route === "inbound"
-          ? `${spec.companyOneLiner}\nApplying via inbound form with no public footprint yet — true cold start.`
+        spec.route === "applied"
+          ? `${spec.companyOneLiner}\nApplied directly with no public footprint yet — true cold start.`
           : undefined,
     });
 

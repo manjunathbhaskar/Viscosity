@@ -119,8 +119,8 @@ export default function DashboardPage() {
         </select>
         <select className="input max-w-[160px]" value={routeFilter} onChange={(e) => setRouteFilter(e.target.value)}>
           <option value="all">all routes</option>
-          <option value="inbound">inbound</option>
-          <option value="outbound">outbound</option>
+          <option value="applied">applied</option>
+          <option value="sourced">sourced</option>
         </select>
         <div className="flex items-center gap-2">
           <span className="label whitespace-nowrap">min confidence {minConfidence}%</span>

@@ -21,9 +21,9 @@ capabilities. See `diligence/README.md` for that service's contract.
 ```
 POST /api/source  { route, founderName, companyName, githubUsername?, deckMarkdown? }
   -> agent/crew/pipeline.ts::sourceAndScreenDeal
-     -> agent/tools/founder-enrichment.ts   (outbound: GitHub + launches + website)
+     -> agent/tools/founder-enrichment.ts   (sourced: GitHub + launches + website)
         -> lib/diligence-bridge.ts::uploadDossier -> diligence service POST /api/ma/upload
-     -> (inbound: deck text -> naive line-based claims, same Claim/Source shape)
+     -> (applied: deck text -> naive line-based claims, same Claim/Source shape)
      -> lib/diligence-bridge.ts::runWarroom, scanDealbreakers
      -> lib/scoring/three-axis.ts::computeThreeAxisScore
         -> lib/scoring/cold-start.ts (if zero identity signal)

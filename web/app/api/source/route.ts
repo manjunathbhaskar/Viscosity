@@ -4,7 +4,7 @@ import { sourceAndScreenDeal, type SourceDealInput } from "@/agent/crew/pipeline
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-// Inbound apply (deck + name minimum) and outbound scan (GitHub/launches/website)
+// Applied (deck + name minimum) and sourced (GitHub/launches/website) deals
 // both post here — the pipeline converges them into one Screening step.
 export async function POST(req: Request) {
   const body = (await req.json()) as Partial<SourceDealInput>;

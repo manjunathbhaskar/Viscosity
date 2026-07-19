@@ -43,13 +43,13 @@ async function main() {
     await waitForServer();
     console.log("[selfcheck] server is up");
 
-    // 1. Outbound scan sourcing
-    console.log("[selfcheck] outbound scan: source a founder with zero identity signal");
+    // 1. Sourced founder (we found them ourselves)
+    console.log("[selfcheck] sourced: source a founder with zero identity signal");
     const sourceRes = await fetch(`${BASE}/api/source`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        route: "outbound",
+        route: "sourced",
         founderName: "Ada Cortex",
         companyName: "Northwind Vectors",
         companyOneLiner: "Underserved developer tools for growing ai infra market",
@@ -76,21 +76,21 @@ async function main() {
 
     const dealId = sourceData.deal.id;
 
-    // 2. Inbound apply sourcing (deck + name minimum)
-    console.log("[selfcheck] inbound apply: source with deck text only, no github/website");
-    const inboundRes = await fetch(`${BASE}/api/source`, {
+    // 2. Applied founder (deck + name minimum)
+    console.log("[selfcheck] applied: source with deck text only, no github/website");
+    const appliedRes = await fetch(`${BASE}/api/source`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        route: "inbound",
+        route: "applied",
         founderName: "Priya Somers",
         companyName: "Ledger Loop",
         deckMarkdown: "We shipped an MVP with paying customers.\nWe have a growing market and no direct competitors.\n",
       }),
     });
-    const inboundData = await inboundRes.json();
-    assert(inboundData.ok === true, "inbound apply route returns ok:true");
-    assert(inboundData.claims.length > 0, "deck text produced claims");
+    const appliedData = await appliedRes.json();
+    assert(appliedData.ok === true, "applied route returns ok:true");
+    assert(appliedData.claims.length > 0, "deck text produced claims");
 
     // 3. Trust score is per-claim
     console.log("[selfcheck] trust score lookup");

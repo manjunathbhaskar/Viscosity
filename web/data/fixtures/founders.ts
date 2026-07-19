@@ -14,7 +14,7 @@ export interface DemoFounderSpec {
   founderName: string;
   companyName: string;
   companyOneLiner: string;
-  route: "inbound" | "outbound";
+  route: "applied" | "sourced";
   githubUsername?: string;
   websiteUrl?: string;
   xHandle?: string;
@@ -25,7 +25,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     founderName: "Ada Cortex",
     companyName: "Northwind Vectors",
     companyOneLiner: "Developer tools for a growing, underserved ai infra market",
-    route: "outbound",
+    route: "sourced",
     githubUsername: "ada-cortex-demo",
     websiteUrl: "https://northwindvectors.demo",
     xHandle: "ada_cortex_demo",
@@ -34,7 +34,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     founderName: "Kenji Osei",
     companyName: "Ledger Loop",
     companyOneLiner: "B2B saas for reconciliation",
-    route: "inbound",
+    route: "applied",
     // Deliberately no githubUsername/websiteUrl — true cold-start founder,
     // sourced from a hackathon channel with no other public footprint.
   },
@@ -42,7 +42,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     founderName: "Priyanka Sridhar",
     companyName: "Helix Bio",
     companyOneLiner: "AI-assisted protein folding pipeline for biotech R&D teams",
-    route: "outbound",
+    route: "sourced",
     // Deliberately no githubUsername — demonstrates agentic discovery:
     // Sourcing searches GitHub for "Helix Bio" itself and finds a real
     // candidate before falling back to a cold start. Also has arXiv papers
@@ -53,7 +53,7 @@ export const DEMO_FOUNDERS: DemoFounderSpec[] = [
     founderName: "Marco Delacroix",
     companyName: "Vantage Robotics",
     companyOneLiner: "Autonomous warehouse robotics for mid-market logistics",
-    route: "outbound",
+    route: "sourced",
     githubUsername: "vantage-robotics-demo",
     websiteUrl: "https://vantagerobotics.demo",
     // Website fixture text mentions an unresolved co-founder dispute — the

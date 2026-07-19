@@ -74,8 +74,8 @@ the actual call.
    paper/patent claims.
 5. Marco Delacroix — point out the Dealbreaker Scanner section showing a
    real critical finding.
-6. `/dashboard/source` — run a real outbound scan live, on a real GitHub
-   handle, in front of the room.
+6. `/dashboard/source` — source a founder live, on a real GitHub handle, in
+   front of the room.
 7. `/dashboard/validate` — the prediction log, and the honest note that it's
    real logging machinery waiting on real outcome data.
 
@@ -86,8 +86,8 @@ npm run test:mock   # scripted end-to-end check, no browser needed
 npm run build        # production build
 ```
 
-`npm run test:mock` starts a local server, sources both an outbound and an
-inbound deal, verifies the three axes stay independent, checks the trust
+`npm run test:mock` starts a local server, sources both a sourced and an
+applied deal, verifies the three axes stay independent, checks the trust
 score is decomposed rather than a bare number, confirms the Red Flag Score
 and Thesis Fit reasoning are actually persisted rather than discarded,
 confirms the self-correction validator actually ran, and generates a memo —

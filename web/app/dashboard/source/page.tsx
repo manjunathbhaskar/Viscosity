@@ -14,7 +14,7 @@ const STATUS_BADGE: Record<string, string> = { live: "badge-green", mock: "badge
 
 export default function SourcePage() {
   const router = useRouter();
-  const [route, setRoute] = useState<"inbound" | "outbound">("outbound");
+  const [route, setRoute] = useState<"applied" | "sourced">("sourced");
   const [founderName, setFounderName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [companyOneLiner, setCompanyOneLiner] = useState("");
@@ -67,8 +67,8 @@ export default function SourcePage() {
         <p className="label mb-1">flowstart</p>
         <h1 className="serif text-[30px] leading-tight text-[var(--ink)]">Pulse → Simulation → Diligence</h1>
         <p className="mt-3 max-w-xl text-[13.5px] text-[var(--muted)]">
-          Spin up a deal with outbound discovery (GitHub, launches, web, Tavily pulse) or inbound deck. Each run fans into swarm
-          simulation, an influence plan, the diligence bridge, and memo audio.
+          Spin up a deal by sourcing a founder yourself (GitHub, launches, web, Tavily pulse) or by taking their
+          application deck. Each run fans into swarm simulation, an influence plan, the diligence bridge, and memo audio.
         </p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -105,22 +105,22 @@ export default function SourcePage() {
             <h2 className="text-[18px] font-semibold">Create a new deal</h2>
           </div>
           <div className="card-dark rounded-full px-3 py-1.5 text-[12px]">
-            {route === "outbound" ? "Outbound scan" : "Inbound apply"}
+            {route === "sourced" ? "Sourced" : "Applied"}
           </div>
         </div>
 
         <div className="card-paper mb-4 flex gap-1.5 p-1.5">
           <button
-            className={`pill-tab flex-1 justify-center ${route === "outbound" ? "active" : ""}`}
-            onClick={() => setRoute("outbound")}
+            className={`pill-tab flex-1 justify-center ${route === "sourced" ? "active" : ""}`}
+            onClick={() => setRoute("sourced")}
           >
-            outbound scan
+            sourced
           </button>
           <button
-            className={`pill-tab flex-1 justify-center ${route === "inbound" ? "active" : ""}`}
-            onClick={() => setRoute("inbound")}
+            className={`pill-tab flex-1 justify-center ${route === "applied" ? "active" : ""}`}
+            onClick={() => setRoute("applied")}
           >
-            inbound apply
+            applied
           </button>
         </div>
 
@@ -129,7 +129,7 @@ export default function SourcePage() {
           <input className="input" placeholder="company name *" value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
           <input className="input" placeholder="one-liner (optional)" value={companyOneLiner} onChange={(e) => setCompanyOneLiner(e.target.value)} />
 
-          {route === "outbound" && (
+          {route === "sourced" && (
             <>
               <input className="input" placeholder="github username (optional)" value={githubUsername} onChange={(e) => setGithubUsername(e.target.value)} />
               <input className="input" placeholder="website url (optional)" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} />
@@ -137,7 +137,7 @@ export default function SourcePage() {
             </>
           )}
 
-          {route === "inbound" && (
+          {route === "applied" && (
             <textarea
               className="input min-h-32"
               placeholder="paste deck text / application text here"
