@@ -82,6 +82,19 @@ never a single blended gauge. An earlier version of the header computed an
 average of the three axes' confidence into one ring — that was a real bug,
 not a design choice, and has been removed.
 
+## Swarm simulation — adversarial multi-agent scenario mapping
+
+`lib/swarm-bridge.ts` calls a second external service, `swarm/` (this repo,
+started as its own process — see `swarm/README.md`), over the same
+external-service pattern as the diligence bridge: `POST /api/simulate`,
+never embedded, `VCBRAIN_MOCK=1` or an unset `SWARM_BASE_URL` falls back to
+a small deterministic scenario pair. Unlike the diligence service, `swarm/`
+runs entirely against a local Ollama instance rather than a hosted API —
+crawl public sources, compress into opinion clusters, scan for a tail-risk
+trigger, run a persona-driven reviewer swarm, calculate cognitive dissonance
+from that swarm's real sentiment data (pure arithmetic, not an LLM call),
+then synthesize a decision map.
+
 ## Discover — Founders and events, not just what's already sourced
 
 `lib/discover.ts` and `lib/events.ts` (both surfaced at `/dashboard/discover`)

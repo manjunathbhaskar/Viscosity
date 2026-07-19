@@ -32,14 +32,65 @@ project is built around three deliberate constraints instead:
 ```
 web/         Next.js 15 / React 19 app — orchestration, scoring, Memory layer, UI
 diligence/   Contract docs for an external diligence service (no third-party code)
+swarm/       Standalone Flask + Ollama service — adversarial multi-agent simulation
 docs/        Architecture notes
 ```
 
 `web/` is a self-contained application with no embedded third-party source.
-It optionally calls a separate diligence service over plain HTTP for
-document-analysis capabilities (knowledge graph, red-flag scan, absence
-detection, dealbreaker scan) — see `diligence/README.md` for that contract.
-Everything works fully offline in mock mode with zero external dependencies.
+It optionally calls two separate services over plain HTTP, each started
+independently: a diligence service for document-analysis capabilities
+(knowledge graph, red-flag scan, absence detection, dealbreaker scan — see
+`diligence/README.md`) and the `swarm/` simulation service in this repo (see
+`swarm/README.md`). Everything works fully offline in mock mode with zero
+external dependencies, including both of those.
+
+## Architecture at a glance
+
+```mermaid
+flowchart LR
+    subgraph web["web/ (Next.js — orchestration, scoring, UI)"]
+        Source["/api/source\nSourcing + Screening"]
+        Memory[("Memory layer\nfounders · claims · sources · deals")]
+        Scoring["3-axis scorer\nTrust Score\nCold-start scoring"]
+        Memo["/api/memo\nMemo generator"]
+        Discover["/dashboard/discover\nDiscover + Digest + Events"]
+    end
+
+    Tools["agent/tools/*\nGitHub · arXiv · patents · X\nlaunches · website"] --> Source
+    Source --> Memory --> Scoring --> Memo
+    Discover -.ephemeral, never persisted.-> Tools
+
+    Scoring -->|"lib/diligence-bridge.ts"| Diligence["external diligence service\n(not in this repo)"]
+    Memo -->|"lib/swarm-bridge.ts"| Swarm["swarm/ service\n(this repo, separate process)"]
+    Memo -->|"lib/elevenlabs.ts"| Voice["ElevenLabs\naudio brief + voice Q&A"]
+
+    Diligence -.HTTP.-> web
+    Swarm -.HTTP.-> web
+```
+
+```mermaid
+flowchart TD
+    A["1. Crawl\nweb search · Reddit · HN · YouTube"] --> B["2. Compress\nLLM: 5 opinion clusters"]
+    B --> C["3. Risk scan\nLLM: Tail-Risk Hunter finds the trigger"]
+    C --> D["4. Reviewer swarm\n25/50/200 persona LLM calls, waved"]
+    D --> E["5. Dissonance\npure arithmetic — no LLM"]
+    E --> F["6. Synthesis\nLLM: decision map + linchpin"]
+    F --> G["7. Adaptive scoring\nnon-fatal learning signal"]
+```
+
+## External tools and services, and why
+
+| Tool / service | Used for | Why this one |
+|---|---|---|
+| **GitHub REST + search API** | Founder activity signal; `Discover`'s candidate search | Free, no auth needed for search; the only public API that directly answers "does this person actually ship code" |
+| **arXiv API** | Founder publication signal; `Discover`'s researcher search | Free, no key, canonical source for CS/ML papers — live-verified against real queries before coding against it |
+| **Devpost public search** | Founder-events discovery (`lib/events.ts`) | Only major hackathon/pitch-day aggregator with an accessible unauthenticated search endpoint |
+| **PatentsView API** | Patent signal (`agent/tools/patents.ts`) | Official USPTO-backed patent search API; key-gated, guarded to skip cleanly without one |
+| **X (Twitter) API v2** | Public shipping-post / critique-response signal | Official API, Bearer-token auth; deliberately reads for shipping cadence, not follower counts |
+| **Tavily** | Optional live web-pulse search (`lib/tavily`) | Search API built for LLM tool-use — structured, summarized results instead of raw HTML |
+| **ElevenLabs** | Audio memo briefs + voice Q&A (`lib/elevenlabs.ts`) | Highest-quality low-latency TTS available as a simple REST call; degrades to text-only with no key |
+| **External diligence service** | Document analysis: red-flag score, absence detection, dealbreaker scan | Kept as a separate HTTP service by design — document-analysis is a distinct engineering problem from founder-scoring, and the contract in `diligence/README.md` lets either side evolve independently |
+| **`swarm/` (Ollama-backed)** | Adversarial multi-agent scenario simulation | Runs fully local against your own Ollama instance — no per-call API cost for a stage that makes dozens of LLM calls per run (turbo mode alone is ~25); see `swarm/README.md` for the full pipeline |
 
 ## Quick start
 
@@ -58,7 +109,9 @@ npm run test:mock
 
 To point at a live diligence service instead of mock fixtures, unset
 `VCBRAIN_MOCK` and set `DILIGENCE_BASE_URL` — see `web/.env.example` and
-`diligence/README.md`.
+`diligence/README.md`. To run the swarm simulation live instead of the
+built-in mock scenarios, start `swarm/` (see `swarm/README.md`) and set
+`SWARM_BASE_URL`.
 
 ## Docs
 
@@ -70,6 +123,8 @@ To point at a live diligence service instead of mock fixtures, unset
   narration script for presenting this to a team or judges
 - [`diligence/README.md`](diligence/README.md) — the external diligence
   service's expected API contract
+- [`swarm/README.md`](swarm/README.md) — the multi-agent simulation
+  service's pipeline stages, models, and setup
 
 ## Status
 
@@ -122,3 +177,16 @@ one and runs it through Sourcing (see `docs/ETHICS.md`).
 written digest from a live Discover search and renders a copyable preview.
 Deliberately does not send anything: no email provider is wired up, and it
 never will fire a real send without your explicit go-ahead each time.
+
+**Swarm simulation** (`swarm/`, called via `web/lib/swarm-bridge.ts`) — a
+standalone Flask service, run entirely against a local Ollama instance, that
+takes a deal's topic through six real stages (crawl public sources, compress
+into opinion clusters, scan for the tail-risk trigger, run a 25/50/200-strong
+reviewer swarm of biased personas, calculate cognitive dissonance from that
+swarm's actual sentiment data, synthesize a decision map) plus a non-fatal
+adaptive-scoring stage. Live-tested end to end against a local Ollama
+instance (`llama3.2:3b` / `phi4:14b` / `mistral-small:24b`) — turbo mode (25
+reviewers) completed in just under 3 minutes and returned a real, non-mocked
+scenario map matching `swarm-bridge.ts`'s expected shape exactly, no client
+changes required. With `SWARM_BASE_URL` unset, `web/` uses a small
+deterministic mock scenario pair instead — see `swarm/README.md`.
