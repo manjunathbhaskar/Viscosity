@@ -110,10 +110,13 @@ honestly labeled stub.
 
 **Discover** (`/dashboard/discover`, `lib/discover.ts`) — actively searches
 GitHub and arXiv for new candidates matching an industry/geography/university
-filter, live-verified during development. Deliberately writes nothing to the
-Memory layer on its own; a candidate becomes a real, persisted, scored deal
-only once a human picks one and runs it through Sourcing (see
-`docs/ETHICS.md`).
+filter, live-verified during development. Also surfaces founder events
+(`lib/events.ts` — hackathons, pitch days, demo days via Devpost's public
+search, live-verified) matching the same industry/geography filters, so a
+VC can see what's happening in their vertical before any individual founder
+gets sourced. Deliberately writes nothing to the Memory layer on its own; a
+candidate becomes a real, persisted, scored deal only once a human picks
+one and runs it through Sourcing (see `docs/ETHICS.md`).
 
 **Monthly digest** (`/dashboard/digest`, `lib/digest.ts`) — composes a real,
 written digest from a live Discover search and renders a copyable preview.

@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import VoicePlayer from "@/components/voice-player";
+import ScoreArc from "@/components/score-arc";
+import TrustMeter from "@/components/trust-meter";
 import type { DealStage, Trend, TrustLevel } from "@/lib/types";
 
 interface AxisScore {
@@ -153,22 +155,6 @@ function Meter({ pct, color = "var(--accent)" }: { pct: number; color?: string }
   );
 }
 
-function AxisCard({ label, axis }: { label: string; axis: AxisScore }) {
-  return (
-    <div className="card-paper p-4">
-      <p className="label mb-1">{label}</p>
-      <p className="serif text-[30px] leading-none">{axis.score}</p>
-      <div className="my-2">
-        <Meter pct={axis.score} />
-      </div>
-      <p className="mt-1 text-[12px] text-[var(--muted)]">
-        interval {axis.low}–{axis.high} · trend {axis.trend} · confidence {Math.round(axis.confidence * 100)}%
-      </p>
-      <p className="mt-2 text-[12.5px]">{axis.basis}</p>
-    </div>
-  );
-}
-
 const SEVERITY_BADGE: Record<string, string> = {
   critical: "badge-red",
   high: "badge-red",
@@ -176,7 +162,6 @@ const SEVERITY_BADGE: Record<string, string> = {
   low: "badge-gray",
 };
 
-const TRUST_BADGE: Record<string, string> = { high: "badge-green", medium: "badge-amber", low: "badge-red" };
 const TRUST_RING_COLOR: Record<string, string> = { high: "var(--green)", medium: "var(--amber)", low: "var(--red)" };
 const TRAFFIC_BADGE: Record<string, string> = { red: "badge-red", amber: "badge-amber", green: "badge-green" };
 const TRAFFIC_COLOR: Record<string, string> = { red: "var(--red)", amber: "var(--amber)", green: "var(--green)" };
@@ -383,12 +368,6 @@ export default function DealDetailPage() {
     ? latestSim.feed.filter((f) => f.confidence >= 0.7 && f.sentiment !== "neutral")
     : [];
 
-  const avgConfidence = data.scoreRecord
-    ? Math.round(
-        ((data.scoreRecord.latest.founder.confidence + data.scoreRecord.latest.market.confidence + data.scoreRecord.latest.ideaVsMarket.confidence) / 3) * 100
-      )
-    : 0;
-
   return (
     <div className="rise flex flex-col gap-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -404,32 +383,20 @@ export default function DealDetailPage() {
           </p>
           <p className="label mt-1">{data.deal.route} route</p>
         </div>
-        <div className="flex gap-2">
-          <button className="btn" onClick={generateMemo} disabled={generatingMemo}>
-            {generatingMemo ? "generating..." : data.memo ? "regenerate memo" : "generate memo"}
-          </button>
-        </div>
 
         <div className="flex items-center gap-4">
           {data.scoreRecord && (
-            <div className="flex items-center gap-3 rounded-2xl border border-[var(--faint)] bg-[var(--card-deep)] px-4 py-2.5">
-              <div className="text-center">
-                <p className="serif text-[18px] leading-none">{data.scoreRecord.latest.founder.score}</p>
-                <p className="label mt-0.5">founder</p>
-              </div>
-              <div className="text-center">
-                <p className="serif text-[18px] leading-none">{data.scoreRecord.latest.market.score}</p>
-                <p className="label mt-0.5">market</p>
-              </div>
-              <div className="text-center">
-                <p className="serif text-[18px] leading-none">{data.scoreRecord.latest.ideaVsMarket.score}</p>
-                <p className="label mt-0.5">idea×mkt</p>
-              </div>
-              <Ring pct={avgConfidence} color="var(--accent)" size={40} />
+            <div className="flex items-center gap-1 rounded-2xl border border-[var(--faint)] bg-[var(--card-deep)] px-3 py-2">
+              <ScoreArc size="sm" label="founder" score={data.scoreRecord.latest.founder.score} low={data.scoreRecord.latest.founder.low} high={data.scoreRecord.latest.founder.high} trend={data.scoreRecord.latest.founder.trend} />
+              <ScoreArc size="sm" label="market" score={data.scoreRecord.latest.market.score} low={data.scoreRecord.latest.market.low} high={data.scoreRecord.latest.market.high} trend={data.scoreRecord.latest.market.trend} />
+              <ScoreArc size="sm" label="idea×mkt" score={data.scoreRecord.latest.ideaVsMarket.score} low={data.scoreRecord.latest.ideaVsMarket.low} high={data.scoreRecord.latest.ideaVsMarket.high} trend={data.scoreRecord.latest.ideaVsMarket.trend} />
             </div>
           )}
           {data.deal.redFlagScore && (
-            <Ring pct={100 - data.deal.redFlagScore.score} color={TRAFFIC_COLOR[data.deal.redFlagScore.trafficLight]} size={40} />
+            <div className="text-center" title="Red Flag Score — a separate diligence-engine document scan, not blended with the 3-axis score">
+              <Ring pct={100 - data.deal.redFlagScore.score} color={TRAFFIC_COLOR[data.deal.redFlagScore.trafficLight]} size={40} />
+              <p className="label mt-0.5">red flag</p>
+            </div>
           )}
           <button className="btn" onClick={generateMemo} disabled={generatingMemo}>
             {generatingMemo ? "generating…" : data.memo ? "regenerate memo" : "generate memo"}
@@ -455,9 +422,18 @@ export default function DealDetailPage() {
             <section>
               <p className="label mb-3">3-axis score — independent, never averaged</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <AxisCard label="founder" axis={data.scoreRecord.latest.founder} />
-                <AxisCard label="market" axis={data.scoreRecord.latest.market} />
-                <AxisCard label="idea vs. market" axis={data.scoreRecord.latest.ideaVsMarket} />
+                {(
+                  [
+                    ["founder", data.scoreRecord.latest.founder],
+                    ["market", data.scoreRecord.latest.market],
+                    ["idea vs. market", data.scoreRecord.latest.ideaVsMarket],
+                  ] as const
+                ).map(([label, axis]) => (
+                  <div key={label} className="card-paper flex flex-col items-center p-4 text-center">
+                    <ScoreArc size="lg" label={label} score={axis.score} low={axis.low} high={axis.high} trend={axis.trend} confidence={axis.confidence} />
+                    <p className="mt-2 text-[12.5px] text-[var(--muted)]">{axis.basis}</p>
+                  </div>
+                ))}
               </div>
               <p className="label mt-2">
                 memory: {data.scoreRecord.repetitions} corroborating repetition{data.scoreRecord.repetitions === 1 ? "" : "s"}, ease factor{" "}
@@ -581,17 +557,15 @@ export default function DealDetailPage() {
                   return (
                     <div key={c.id} className="card-paper p-3">
                       <p className="text-[13px]">{c.text}</p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                      <div className="mt-2 flex flex-wrap items-center gap-4">
                         {url && (
-                          <a href={url} target="_blank" rel="noreferrer" className="label link-green">
+                          <a href={url} target="_blank" rel="noreferrer" className="label link-green shrink-0">
                             source →
                           </a>
                         )}
-                        {trust && (
-                          <span className={`badge ${TRUST_BADGE[trust.level]}`}>trust {Math.round(trust.confidence * 100)}%</span>
-                        )}
+                        {trust && <div className="w-40 shrink-0"><TrustMeter confidence={trust.confidence} components={trust.components} level={trust.level} /></div>}
                         <button
-                          className="btn-ghost ml-auto text-[12px]"
+                          className="btn-ghost ml-auto shrink-0 text-[12px]"
                           onClick={() => attachClaimToTraceability(c.id, c.text)}
                           disabled={logged}
                         >
@@ -652,7 +626,7 @@ export default function DealDetailPage() {
                         <Meter pct={c.confidence * 100} color="var(--blue)" />
                       </div>
                     </div>
-                    {trust && <span className={`badge ${TRUST_BADGE[trust.level]}`}>trust {Math.round(trust.confidence * 100)}%</span>}
+                    {trust && <TrustMeter compact confidence={trust.confidence} components={trust.components} level={trust.level} />}
                     <button className="btn-ghost ml-auto text-[12px]" onClick={() => attachClaimToTraceability(c.id, c.text)} disabled={logged}>
                       {logged ? "logged ✓" : "log claim"}
                     </button>

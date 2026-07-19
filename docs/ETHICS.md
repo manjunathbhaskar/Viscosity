@@ -61,6 +61,10 @@ results list. That only starts once a human explicitly picks a candidate
 and runs them through Sourcing — the same claim-by-claim, evidence-linked
 process every other founder goes through, not a shortcut.
 
+The same rule applies to founder events (`lib/events.ts`) — a hackathon or
+pitch day showing up in a search is public event listing data, not a
+profile of any individual person, and nothing about it is persisted either.
+
 ## The digest never sends itself
 
 The monthly digest (`lib/digest.ts`) composes real written text from a live

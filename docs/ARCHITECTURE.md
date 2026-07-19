@@ -76,6 +76,20 @@ survives across applications.
 - **Trust Score** (`lib/scoring/trust-score.ts`): per claim —
   `{dataVolume, dataCleanliness, signalAgreement}` decomposed, not collapsed.
 
+This is enforced in the UI too, not just the data model: `app/deal/[id]/page.tsx`
+renders three independent `ScoreArc` components (`components/score-arc.tsx`),
+never a single blended gauge. An earlier version of the header computed an
+average of the three axes' confidence into one ring — that was a real bug,
+not a design choice, and has been removed.
+
+## Discover — Founders and events, not just what's already sourced
+
+`lib/discover.ts` and `lib/events.ts` (both surfaced at `/dashboard/discover`)
+actively search GitHub, arXiv, and Devpost for new candidates and founder
+events matching an industry/geography/university filter, rather than only
+showing what's already in Memory. Both are stateless — see
+`docs/ETHICS.md` for why a search result is never persisted.
+
 ## What's a real module boundary but not fully implemented
 
 Each file below says so explicitly in its own header comment: `lib/self-validation.ts`

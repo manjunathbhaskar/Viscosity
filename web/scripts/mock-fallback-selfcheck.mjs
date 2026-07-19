@@ -121,6 +121,18 @@ async function main() {
     assert(Array.isArray(discoverData.candidates) && discoverData.candidates.length > 0, "discover surfaces candidates for a known mock filter combo");
     assert(discoverData.candidates.every((c) => c.sourceUrl && c.sourceKind), "every candidate carries a source url and kind");
 
+    // 4b2. Events — founder events matching the same filters
+    console.log("[selfcheck] events: hackathons/pitch days for the same filter combo");
+    const eventsRes = await fetch(`${BASE}/api/events`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ industry: "robotics", geography: "San Francisco" }),
+    });
+    const eventsData = await eventsRes.json();
+    assert(eventsData.ok === true, "events route returns ok:true");
+    assert(Array.isArray(eventsData.events) && eventsData.events.length > 0, "events surfaces hits for a known mock filter combo");
+    assert(eventsData.events.every((e) => e.url && e.location), "every event carries a url and a location");
+
     // 4c. Digest — written preview built on Discover, never sends anything
     console.log("[selfcheck] digest: generate a preview, confirm it never sends");
     const digestRes = await fetch(`${BASE}/api/digest`, {

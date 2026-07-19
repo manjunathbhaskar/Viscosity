@@ -351,3 +351,16 @@ export interface Candidate {
   suggestedGithubUsername?: string;
   matchedFilters: DiscoverFilters;
 }
+
+// A founder event — hackathon, pitch day, demo day — also ephemeral, same
+// no-persistence rule as Candidate. Lets a VC see what's happening in their
+// vertical/geography before founders from it ever get sourced individually.
+export interface FounderEvent {
+  id: string;
+  title: string;
+  location: string; // "Online" is a real, common value — not a bug
+  url: string;
+  submissionDates: string;
+  themes: string[];
+  organizer?: string;
+}
