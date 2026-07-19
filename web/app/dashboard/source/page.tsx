@@ -74,7 +74,7 @@ export default function SourcePage() {
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             { title: "Pulse", body: "Tavily web signals become claims (web_pulse)", key: "tavily" as const },
-            { title: "Swarm", body: "BlackSwanX/NEXUS adversarial swarm via sidecar", key: "swarm" as const },
+            { title: "Swarm", body: "Adversarial multi-agent simulation via sidecar", key: "swarm" as const },
             { title: "Audio", body: "Memos to speech with ElevenLabs", key: "elevenlabs" as const },
           ].map((item) => (
             <div key={item.title} className="card-paper p-3">

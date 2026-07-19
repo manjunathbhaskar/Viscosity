@@ -2,11 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-// Ticks 0 -> 375 on mount (roughly the real 174 expert + ~200 citizen
-// BlackSwanX roster — see lib/swarm-bridge.ts), then settles with a
-// "synchronized" mark. Purely cosmetic on the landing page; the real count
-// per run varies by mode (turbo/standard/deep) and is shown accurately on
-// the deal page's Simulation tab.
+// Ticks 0 -> 375 on mount, then settles with a "synchronized" mark. Purely
+// cosmetic on the landing page — the real active-agent count per run
+// varies by simulation mode (turbo/standard/deep) and is shown accurately
+// on the deal page's Simulation tab (see lib/swarm-bridge.ts).
 export default function SwarmCounter() {
   const [count, setCount] = useState(0);
   const [synced, setSynced] = useState(false);

@@ -677,7 +677,7 @@ export default function DealDetailPage() {
           {runningSim && (
             <div className="mb-4 flex items-center gap-2">
               <span className="sentiment-dot live bullish" />
-              <p className="label">crawl → kill-shot risk → citizen census → synthesis, running locally on Ollama…</p>
+              <p className="label">crawl → kill-shot risk → reviewer census → synthesis, running locally on Ollama…</p>
             </div>
           )}
           {data.simulations.length === 0 && !runningSim && (
@@ -751,7 +751,7 @@ export default function DealDetailPage() {
 
               {latestSim.feed.length > 0 && (
                 <div>
-                  <p className="label mb-2">live citizen feed ({latestSim.feed.length} opinions)</p>
+                  <p className="label mb-2">live reviewer feed ({latestSim.feed.length} opinions)</p>
                   <div className="flex max-h-96 flex-col gap-1.5 overflow-y-auto">
                     {latestSim.feed.map((f) => (
                       <div key={f.id} className="card-paper flex items-start gap-2 p-2.5">

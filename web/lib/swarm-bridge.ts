@@ -75,8 +75,8 @@ export async function runSwarmSimulation(input: SwarmSimulationInput): Promise<S
         founder: input.founderName,
         company: input.companyName,
       }),
-      // Turbo mode (25 citizens) runs the full crawl->swarm->synthesis pipeline
-      // inline and blocks until done — budget well past its ~2min typical runtime.
+      // Turbo mode runs the full crawl->swarm->synthesis pipeline inline and
+      // blocks until done — budget well past its ~2min typical runtime.
       signal: AbortSignal.timeout(240_000),
     });
 

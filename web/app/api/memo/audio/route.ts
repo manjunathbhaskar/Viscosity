@@ -26,9 +26,12 @@ export async function POST(req: Request) {
 
   try {
     const audioStream = await client.textToSpeech.convert(voiceId, { text: body.text, modelId });
+    const reader = audioStream.getReader();
     const chunks: Uint8Array[] = [];
-    for await (const chunk of audioStream) {
-      chunks.push(chunk);
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(value);
     }
     const audio = Buffer.concat(chunks);
     return new NextResponse(audio, {
