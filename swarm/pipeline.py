@@ -118,11 +118,12 @@ def run_pipeline_sync(topic_id: int, query: str):
         _update_status(topic_id, "simulating")
         swarm_size = int(os.environ.get("VISCOSITY_SWARM_SIZE", "25"))
 
-        if swarm_size >= 200:
-            personas = BULLISH[:60] + BEARISH[:50] + MIXED[:80]
-        elif swarm_size >= 100:
-            personas = BULLISH[:30] + BEARISH[:25] + MIXED[:45]
+        if swarm_size >= 150:
+            # Deep mode: the entire persona bank (155 personas — bounded by
+            # len(BULLISH) + len(BEARISH) + len(MIXED), not a literal 200).
+            personas = BULLISH + BEARISH + MIXED
         elif swarm_size >= 50:
+            # Standard mode: ~50 reviewers, ~5 minutes.
             personas = BULLISH[:15] + BEARISH[:15] + MIXED[:20]
         else:
             # Turbo mode (default): ~25 reviewers, ~2 minutes on a single GPU.

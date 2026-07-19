@@ -69,7 +69,7 @@ def health():
 
 @app.route("/api/simulate", methods=["POST"])
 def api_simulate():
-    """swarm_size: 25 (turbo, ~2min, default) | 50 (standard, ~5min) | 200 (deep, ~25min)."""
+    """swarm_size: 25 (turbo, ~2min, default) | 50 (standard, ~5min) | 150+ (deep, full persona bank, ~20min)."""
     data = request.json or {}
     topic = (data.get("topic") or "").strip()
     founder = (data.get("founder") or "").strip()

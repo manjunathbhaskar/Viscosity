@@ -63,7 +63,7 @@ latency since it's called once per reviewer.
 |---|---|---|
 | Turbo (default) | 25 | ~2 min |
 | Standard | 50 | ~5 min |
-| Deep | 200 | ~25 min |
+| Deep | 155 (the full persona bank — see `personas.py`) | ~20 min |
 
 `web/`'s `swarm-bridge.ts` budgets a 240s timeout on the `/api/simulate`
 call, which comfortably covers turbo mode — raise it client-side if you plan
