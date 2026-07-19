@@ -3,6 +3,7 @@ import { Geist, IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 import DealSwitcher from "@/components/deal-switcher";
 import SystemRibbon from "@/components/system-ribbon";
+import WaterMark from "@/components/water-mark";
 import "./globals.css";
 
 const sans = Geist({
@@ -47,7 +48,7 @@ export default function RootLayout({
         <header>
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5">
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="h-[15px] w-[15px] rounded-full bg-[var(--accent)]" />
+              <WaterMark size={17} />
               <span className="serif text-[19px] font-semibold tracking-tight">
                 viscosity
               </span>
