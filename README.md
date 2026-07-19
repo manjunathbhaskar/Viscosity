@@ -67,6 +67,30 @@ Every external touchpoint is optional and independently guarded: no key or
 no base URL means that one source is skipped, never that anything fails.
 `VCBRAIN_MOCK=1` disables every network call at once for fully offline demos.
 
+### Services and signal flow
+
+```mermaid
+flowchart LR
+    subgraph web["web/ (Next.js — orchestration, scoring, UI)"]
+        Source["/api/source<br/>Sourcing + Screening"]
+        Memory[("Memory layer<br/>founders · claims · sources · deals")]
+        Scoring["3-axis scorer<br/>Trust Score<br/>Cold-start scoring"]
+        Memo["/api/memo<br/>Memo generator"]
+        Discover["/dashboard/discover<br/>Discover + Digest + Events"]
+    end
+
+    Tools["agent/tools/*<br/>GitHub · arXiv · patents · X<br/>launches · website"] --> Source
+    Source --> Memory --> Scoring --> Memo
+    Discover -.ephemeral, never persisted.-> Tools
+
+    Scoring -->|"lib/diligence-bridge.ts"| Diligence["external diligence service<br/>(not in this repo)"]
+    Memo -->|"lib/swarm-bridge.ts"| Swarm["swarm/ service<br/>(this repo, separate process)"]
+    Memo -->|"lib/elevenlabs.ts"| Voice["ElevenLabs<br/>audio brief + voice Q&A"]
+
+    Diligence -.HTTP.-> web
+    Swarm -.HTTP.-> web
+```
+
 ## Data flow — one deal, start to finish
 
 ```

@@ -10,6 +10,18 @@ start yourself, same external-service pattern as `diligence/`.
 
 Six real stages, run inline, blocking until the whole thing finishes:
 
+```mermaid
+flowchart TD
+    A["1. Crawl<br/>web search · Reddit · HN · YouTube"] --> B["2. Compress<br/>LLM: 5 opinion clusters"]
+    B --> C["3. Risk scan<br/>LLM: Tail-Risk Hunter finds the trigger"]
+    C --> D["4. Reviewer swarm<br/>25/50/155 persona LLM calls, waved"]
+    D --> E["5. Dissonance<br/>pure arithmetic — no LLM"]
+    E --> F["6. Synthesis<br/>LLM: decision map + linchpin"]
+    F --> G["7. Adaptive scoring<br/>non-fatal learning signal"]
+```
+
+Detailed breakdown:
+
 1. **Crawl** — pulls public signal on the topic from web search, Reddit,
    Hacker News, and YouTube titles. Every source is best-effort; one failing
    doesn't fail the run.
