@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import VoicePlayer from "@/components/voice-player";
+import type { DealStage, Trend, TrustLevel } from "@/lib/types";
 
 interface AxisScore {
   score: number;

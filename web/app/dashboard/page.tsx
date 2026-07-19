@@ -2,9 +2,6 @@
 
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
-import ScoreArc from "@/components/score-arc";
-import PipelineStage from "@/components/pipeline-stage";
-import RankBadge from "@/components/rank-badge";
 import type { DealStage, Trend } from "@/lib/types";
 
 interface AxisScore {
@@ -37,6 +34,14 @@ interface DealRow {
   updatedAt: string;
 }
 
+const STAGE_BADGE: Record<string, string> = {
+  sourced: "badge-gray",
+  screening: "badge-amber",
+  diligence: "badge-amber",
+  decision_ready: "badge-green",
+  passed: "badge-gray",
+  invested: "badge-green",
+};
 const TRAFFIC_BADGE: Record<string, string> = { red: "badge-red", amber: "badge-amber", green: "badge-green" };
 const TRAFFIC_COLOR: Record<string, string> = { red: "var(--red)", amber: "var(--amber)", green: "var(--green)" };
 
